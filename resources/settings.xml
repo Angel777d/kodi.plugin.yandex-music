@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- https://kodi.wiki/view/Add-on_settings -->
+<settings>
+    <category label="32010">
+        <setting label="32011" type="folder" id="folder" source="music" option="writeable"/>
+    </category>
+
+    <category label="32030">
+        <setting label="32031" id="token" type="text" default=""/>
+        <setting label="32032" type="text" id="username" default=""/>
+        <setting label="32033" type="text" id="password" default=""/>
+    </category>
+
+</settings>

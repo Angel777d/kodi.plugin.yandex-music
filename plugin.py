@@ -2,12 +2,14 @@
 import sys
 import urllib
 import urlparse
+from threading import Thread
 
 import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
+from Extentions import getTrackPath, checkFolder
 from login import checkLogin, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
@@ -26,55 +28,34 @@ def checkSettings():
 		while not folder:
 			folder = xbmcgui.Dialog().browseSingle(dialogType, heading, "music", defaultt=folder)
 		settings.setSetting('folder', folder)
-	xbmc.log("[---] download folder is: %s" % folder, level=xbmc.LOGNOTICE)
 
 
-def build_menu(authorized, client):
-	li = xbmcgui.ListItem(label="Search", thumbnailImage="")
-	# li.setProperty('fanart_image', "")
-	url = build_url({'mode': 'search', 'title': "Search"})
-	entry_list = [(url, li, True), ]
-
-	if authorized:
-		# Show user like item
-		li = xbmcgui.ListItem(label="User Likes", thumbnailImage="")
-		# li.setProperty('fanart_image', "")
-		url = build_url({'mode': 'like', 'title': "User Likes"})
-		entry_list.append((url, li, True))
-
-		# show Landing playlists
-		landing = client.landing(["personal-playlists"])
-		block = [b for b in landing.blocks if b.type == "personal-playlists"][0]
-		playlists = [entity.data.data for entity in block.entities]
-		entry_list += [build_playlist_item(playlist) for playlist in playlists]
-
-		# other user playlists
-		users_playlists_list = client.users_playlists_list()
-		entry_list += [build_playlist_item(playlist, "User playlist: %s") for playlist in users_playlists_list]
-	else:
-		li = xbmcgui.ListItem(label="Login", thumbnailImage="")
-		# li.setProperty('fanart_image', "")
-		url = build_url({'mode': 'login', 'title': "Login"})
-		entry_list.append((url, li, True))
-
-	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
-	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
-
-
-def build_stub(label):
+def build_stub_item(label):
 	li = xbmcgui.ListItem(label=label, thumbnailImage="")
 	li.setProperty('IsPlayable', 'false')
 	url = build_url({'mode': 'stub'})
 	return url, li, False
 
 
+def build_play_all_item(tracks):
+	tracks = ",".join([t.track_id for t in tracks])
+	li = xbmcgui.ListItem(label="Play All", thumbnailImage="")
+	li.setProperty('fanart_image', "")
+	li.setProperty('IsPlayable', 'false')
+	li.setInfo("music", {'Title': "Play All", 'Album': "Play All"})
+	url = build_url({'mode': 'download_and_play', 'tracks': tracks, 'title': "Play All"})
+	return url, li, False
+
+
 def build_track_item(track, titleFormat="%s"):
+	prefixPath = settings.getSetting('folder')
+	exists, path = getTrackPath(prefixPath, track)
 	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage="")
 	li.setProperty('fanart_image', "")
 	li.setProperty('IsPlayable', 'true')
 	album = track.albums[0].title if track.albums else ""
 	li.setInfo("music", {'Title': track.title, 'Album': album})
-	url = build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
+	url = path if exists else build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
 	return url, li, False
 
 
@@ -116,42 +97,66 @@ def build_video_item(video, titleFormat="%s"):
 	return url, li, True
 
 
+def build_menu(authorized, client):
+	li = xbmcgui.ListItem(label="Search", thumbnailImage="")
+	# li.setProperty('fanart_image', "")
+	url = build_url({'mode': 'search', 'title': "Search"})
+	entry_list = [(url, li, True), ]
+
+	if authorized:
+		# Show user like item
+		li = xbmcgui.ListItem(label="User Likes", thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'like', 'title': "User Likes"})
+		entry_list.append((url, li, True))
+
+		# show Landing playlists
+		landing = client.landing(["personal-playlists"])
+		block = [b for b in landing.blocks if b.type == "personal-playlists"][0]
+		playlists = [entity.data.data for entity in block.entities]
+		entry_list += [build_playlist_item(playlist) for playlist in playlists]
+
+		# other user playlists
+		users_playlists_list = client.users_playlists_list()
+		entry_list += [build_playlist_item(playlist, "User playlist: %s") for playlist in users_playlists_list]
+	else:
+		li = xbmcgui.ListItem(label="Login", thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'login', 'title': "Login"})
+		entry_list.append((url, li, True))
+
+	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
+	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
+
+
 def build_album(client, album_id):
 	album = client.albums([album_id])[0]
-	xbmcplugin.addDirectoryItems(addon_handle, [build_stub("TODO: create album: %s" % album.title)], 1)
+	xbmcplugin.addDirectoryItems(addon_handle, [build_stub_item("TODO: create album: %s" % album.title)], 1)
 	xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_artist(client, artist_id):
 	artist = client.artists([artist_id])[0]
-	xbmcplugin.addDirectoryItems(addon_handle, [build_stub("TODO: create artist: %s" % artist.name)], 1)
+	xbmcplugin.addDirectoryItems(addon_handle, [build_stub_item("TODO: create artist: %s" % artist.name)], 1)
 	xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_playlist(client, playlist_id):
 	uid, kind = playlist_id.split(":")
-	xbmc.log("playlist_id. %s %s %s" % (playlist_id, kind, uid), level=xbmc.LOGNOTICE)
 	tracksShort = client.users_playlists(kind=kind, user_id=uid)[0].tracks
 	tracks = client.tracks([t.track_id for t in tracksShort])
-
-	xbmc.log("build_tracks. len: %s" % len(tracks), level=xbmc.LOGNOTICE)
-	entry_list = [build_track_item(track) for track in tracks]
+	entry_list = [build_play_all_item(tracks)]
+	entry_list += [build_track_item(track) for track in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
 	xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_likes(client):
 	tracks = client.tracks([t.track_id for t in client.users_likes_tracks()])
-	entry_list = [build_track_item(track) for track in tracks]
+	entry_list = [build_play_all_item(tracks)]
+	entry_list += [build_track_item(track) for track in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
 	xbmcplugin.endOfDirectory(addon_handle)
-
-
-def getSortedResults(search):
-	fields = ["albums", "artists", "playlists", "tracks", "videos"]
-	tmp = [(getattr(search, field).order, field) for field in fields]
-	tmp = sorted(tmp, key=lambda v: v[0])
-	return [(field, getattr(search, field)) for order, field in tmp]
 
 
 def build_search(client):
@@ -184,22 +189,51 @@ def build_search(client):
 
 
 def play_track(client, track_id):
-	xbmc.log("[---] play_track: %s" % track_id, level=xbmc.LOGNOTICE)
 	track = client.tracks([track_id])[0]
+	prefixPath = settings.getSetting('folder')
+	exists, path = getTrackPath(prefixPath, track)
 
-	dInfo = [d for d in track.get_download_info() if (d.codec == "mp3" and d.bitrate_in_kbps == 192)][0]
-	dInfo.get_direct_link()
-	dlink = dInfo.direct_link
+	def getUrl():
+		dInfo = [d for d in track.get_download_info() if (d.codec == "mp3" and d.bitrate_in_kbps == 192)][0]
+		dInfo.get_direct_link()
+		return dInfo.direct_link
 
-	play_item = xbmcgui.ListItem(path=dlink)
-	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=play_item)
-	pass
+	li = xbmcgui.ListItem(path=path if exists else getUrl())
+	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
+
+	if not exists:
+		t = Thread(target=download_track, args=(track, ))
+		t.start()
+
+def do_load(tracks):
+	notify("Download", "Download %s files" % len(tracks), 5)
+	playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+
+	for index in range(len(tracks)):
+		track = tracks[index]
+		path = download_track(track)
+		if path:
+			url, li, isFolder = build_track_item(track)
+			li.setPath(path)
+			playlist.add(path, li, index)
+
+	notify("Download", "All files downloaded.\n Play now.", 5)
+	xbmc.Player().play(playlist)
+
+
+def download_and_play(client, track_ids):
+	tracks = client.tracks(track_ids)
+	li = xbmcgui.ListItem()
+	xbmcplugin.setResolvedUrl(addon_handle, False, listitem=li)
+
+	t = Thread(target=do_load, args=(tracks,))
+	t.start()
 
 
 def main():
 	checkSettings()
 	authorized, client = checkLogin(settings)
-	xbmc.log("[---] authorized: %s" % authorized, level=xbmc.LOGNOTICE)
+	log("authorized: %s" % authorized)
 
 	args = urlparse.parse_qs(sys.argv[2][1:])
 	mode = args.get('mode', None)
@@ -221,6 +255,9 @@ def main():
 	elif mode[0] == 'track':
 		track_id = args['track_id'][0]
 		play_track(client, track_id)
+	elif mode[0] == 'download_and_play':
+		tracks_ids = args['tracks'][0].split(",")
+		download_and_play(client, tracks_ids)
 	elif mode[0] == 'album':
 		album_id = args['album_id'][0]
 		build_album(client, album_id)
@@ -231,7 +268,67 @@ def main():
 		pass
 
 
+# misc
+def getSortedResults(search):
+	fields = ["albums", "artists", "playlists", "tracks", "videos"]
+	tmp = [(getattr(search, field).order, field) for field in fields]
+	tmp = sorted(tmp, key=lambda v: v[0])
+	return [(field, getattr(search, field)) for order, field in tmp]
+
+
+def download_track(track):
+	download_dir = settings.getSetting('folder')
+	exist, path = getTrackPath(download_dir, track)
+	log("start download: %s" % path)
+	if not exist:
+		try:
+			track.download(path)
+			notify("Download", "Done: %s" % path, 1)
+		except Exception as ex:
+			notify("Download", "Fail download: %s" % path)
+			log("Fail download: %s. ex: %s" % (path, ex))
+			return None
+
+	return path
+
+
+def saveTracks(tracks):
+	import os
+	path = checkFolder("/addon_data/")
+	path = os.path.join(path, "tracks.txt")
+	f = open(path, "w")
+	f.write(",".join([t.track_id for t in tracks]))
+	f.close()
+
+
+def loadTracks():
+	import os
+	path = checkFolder("/addon_data/")
+	path = os.path.join(path, "tracks.txt")
+	if not os.path.exists(path):
+		return []
+	f = open(path, "r")
+	result = f.read()
+	f.close()
+	return result.split(",")
+
+
+def notify(title, msg, duration=1):
+	xbmc.executebuiltin("Notification(%s,%s,%s)" % (legalize(title), legalize(msg), duration))
+
+
+def log(msg, level=xbmc.LOGNOTICE):
+	plugin = "---"
+	xbmc.log("[%s] %s" % (plugin, legalize(msg)), level)
+
+
+def legalize(value):
+	if isinstance(value, unicode):
+		value = value.encode('utf-8')
+	return value.__str__()
+
+
 if __name__ == '__main__':
-	xbmc.log("[---] sys.argv: %s" % sys.argv, level=xbmc.LOGNOTICE)
+	log("sys.argv: %s" % sys.argv)
 	addon_handle = int(sys.argv[1])
 	main()

@@ -6,8 +6,8 @@ _EXCLUDED = u':/?|;.<>*"'
 
 
 def _trackSimpleData(track):
-	artist = u"".join([c for c in track.artists[0].name if track.artists and c not in _EXCLUDED])
-	album = u"".join([c for c in track.albums[0].title if track.albums and c not in _EXCLUDED])
+	artist = u"".join([c for c in track.artists[0].name if c not in _EXCLUDED]) if track.artists else ""
+	album = u"".join([c for c in track.albums[0].title if c not in _EXCLUDED]) if track.albums else ""
 	title = track.title
 	return title, album, artist
 

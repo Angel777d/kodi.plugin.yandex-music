@@ -37,6 +37,15 @@ def build_stub_item(label):
 	return url, li, False
 
 
+def build_simple_item(title, data, mode, isFolder=False):
+	li = xbmcgui.ListItem(label=title, thumbnailImage="")
+	li.setProperty('fanart_image', "")
+	li.setProperty('IsPlayable', 'false')
+	li.setInfo("music", {'Title': title, 'Album': title})
+	url = build_url({'mode': mode, 'data': data, 'title': title})
+	return url, li, isFolder
+
+
 def build_play_all_item(tracks):
 	tracks = ",".join([t.track_id for t in tracks])
 	li = xbmcgui.ListItem(label="Play All", thumbnailImage="")
@@ -136,8 +145,51 @@ def build_album(client, album_id):
 
 
 def build_artist(client, artist_id):
+	artist_brief = client.artists_brief_info(artist_id)
+	counts = artist_brief.artist.counts
+
+	elements = []
+
+	# all albums
+	albums = artist_brief.albums
+	showAllAlbums = len(albums) < counts.direct_albums
+	if showAllAlbums:
+		item = build_simple_item("Show All [%s] Albums" % counts.direct_albums, artist_id, "show_all_albums", True)
+		elements.append(item)
+	elements += [build_album_item(album) for album in albums]
+
+	# all tracks
+	tracks = artist_brief.popular_tracks
+	showAllTracks = len(tracks) < counts.tracks
+	if showAllTracks:
+		item = build_simple_item("Show All [%s] Tracks" % counts.tracks, artist_id, "show_all_tracks", True)
+		elements.append(item)
+
+	elements += [build_track_item(track) for track in tracks]
+
+	# TODO: add playlists
+	# playlists = client.playlists_list(artist_brief.playlist_ids)
+	# elements += [build_playlist_item(playlist) for playlist in playlists]
+
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_all_tracks(client, artist_id):
 	artist = client.artists([artist_id])[0]
-	xbmcplugin.addDirectoryItems(addon_handle, [build_stub_item("TODO: create artist: %s" % artist.name)], 1)
+	artist_tracks = client.artists_tracks(artist_id, page=0, page_size=artist.counts.tracks)
+	tracks = artist_tracks.tracks
+	elements = [build_track_item(t) for t in tracks]
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_all_albums(client, artist_id):
+	artist = client.artists([artist_id])[0]
+	artist_albums = client.artists_direct_albums(artist.id, page=0, page_size=artist.counts.direct_albums)
+	albums = artist_albums.albums
+	elements = [build_album_item(t) for t in albums]
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
 
 
@@ -145,7 +197,12 @@ def build_playlist(client, playlist_id):
 	uid, kind = playlist_id.split(":")
 	tracksShort = client.users_playlists(kind=kind, user_id=uid)[0].tracks
 	tracks = client.tracks([t.track_id for t in tracksShort])
+
+	# TODO: replace
+	# tracks = ",".join([t.track_id for t in tracks])
+	# build_simple_item("Play All", tracks, "download_and_play")
 	entry_list = [build_play_all_item(tracks)]
+
 	entry_list += [build_track_item(track) for track in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -202,8 +259,9 @@ def play_track(client, track_id):
 	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
 
 	if not exists:
-		t = Thread(target=download_track, args=(track, ))
+		t = Thread(target=download_track, args=(track,))
 		t.start()
+
 
 def do_load(tracks):
 	notify("Download", "Download %s files" % len(tracks), 5)
@@ -266,6 +324,12 @@ def main():
 		build_artist(client, artist_id)
 	elif mode[0] == 'video':
 		pass
+	elif mode[0] == 'show_all_albums':
+		album_id = args['data'][0]
+		build_all_albums(client, album_id)
+	elif mode[0] == 'show_all_tracks':
+		album_id = args['data'][0]
+		build_all_tracks(client, album_id)
 
 
 # misc

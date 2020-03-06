@@ -1,6 +1,20 @@
 # coding=utf-8
 
 import os
+import platform
+
+plt = platform.system()
+
+
+def fixWindows(path):
+	return path
+
+
+def fixLinux(path):
+	return path.encode("utf-8")
+
+
+fixPath = fixWindows if plt == "Windows" else fixLinux
 
 _EXCLUDED = ':/?|;.<>*"'
 
@@ -9,7 +23,7 @@ def _trackSimpleData(track):
 	artist = "".join([c for c in track.artists[0].name if c not in _EXCLUDED]) if track.artists else ""
 	album = "".join([c for c in track.albums[0].title if c not in _EXCLUDED]) if track.albums else ""
 	title = track.title
-	return title.encode("utf-8"), album.encode("utf-8"), artist.encode("utf-8")
+	return title, album, artist
 
 
 def folder(track):
@@ -21,8 +35,13 @@ def folder(track):
 
 
 def filename(track):
-	title = "".join(["_" if c in _EXCLUDED else c for c in track.title])
-	return ("%s.mp3" % title).encode("utf-8")
+	title, album, artist = _trackSimpleData(track)
+	title = "".join(["_" if c in _EXCLUDED else c for c in title])
+	return "%s.mp3" % title
+
+
+def exists(path):
+	return os.path.exists(fixPath(path))
 
 
 def getTrackPath(prefixPath, track):
@@ -30,13 +49,13 @@ def getTrackPath(prefixPath, track):
 	f = filename(track)
 	path = os.path.join(path, f)
 	path = os.path.normpath(path)
-	return os.path.exists(path), path
+	return exists(path), path
 
 
 def checkFolder(path):
 	path = os.path.normpath(path)
-	if not os.path.exists(path):
-		os.makedirs(path)
+	if not exists(path):
+		os.makedirs(fixPath(path))
 	return path
 
 

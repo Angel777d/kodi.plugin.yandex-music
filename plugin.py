@@ -9,7 +9,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
-from Extentions import getTrackPath, checkFolder
+from Extentions import getTrackPath, checkFolder, fixPath, exists
 from login import checkLogin, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
@@ -58,13 +58,13 @@ def build_play_all_item(tracks):
 
 def build_track_item(track, titleFormat="%s"):
 	prefixPath = settings.getSetting('folder')
-	exists, path = getTrackPath(prefixPath, track)
+	downloaded, path = getTrackPath(prefixPath, track)
 	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage="")
 	li.setProperty('fanart_image', "")
 	li.setProperty('IsPlayable', 'true')
 	album = track.albums[0].title if track.albums else ""
 	li.setInfo("music", {'Title': track.title, 'Album': album})
-	url = path if exists else build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
+	url = path if downloaded else build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
 	return url, li, False
 
 
@@ -254,17 +254,17 @@ def build_search(client):
 def play_track(client, track_id):
 	track = client.tracks([track_id])[0]
 	prefixPath = settings.getSetting('folder')
-	exists, path = getTrackPath(prefixPath, track)
+	downloaded, path = getTrackPath(prefixPath, track)
 
 	def getUrl():
 		dInfo = [d for d in track.get_download_info() if (d.codec == "mp3" and d.bitrate_in_kbps == 192)][0]
 		dInfo.get_direct_link()
 		return dInfo.direct_link
 
-	li = xbmcgui.ListItem(path=path if exists else getUrl())
+	li = xbmcgui.ListItem(path=path if downloaded else getUrl())
 	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
 
-	if not exists:
+	if not downloaded:
 		t = Thread(target=download_track, args=(track,))
 		t.start()
 
@@ -352,7 +352,7 @@ def download_track(track):
 	log("start download: %s" % path)
 	if not exist:
 		try:
-			track.download(path)
+			track.download(fixPath(path))
 			notify("Download", "Done: %s" % path, 1)
 		except Exception as ex:
 			notify("Download", "Fail download: %s" % path)
@@ -375,7 +375,7 @@ def loadTracks():
 	import os
 	path = checkFolder("/addon_data/")
 	path = os.path.join(path, "tracks.txt")
-	if not os.path.exists(path):
+	if not exists(path):
 		return []
 	f = open(path, "r")
 	result = f.read()

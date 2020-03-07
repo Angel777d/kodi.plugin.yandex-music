@@ -8,7 +8,7 @@
     </requires>
 
     <extension point="xbmc.python.pluginsource" library="plugin.py">
-        <provides>audio video</provides>
+        <provides>audio</provides>
     </extension>
 
     <extension point="xbmc.addon.metadata">

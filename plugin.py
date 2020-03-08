@@ -9,7 +9,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
-from Extentions import getTrackPath, checkFolder, fixPath, exists
+from Extentions import getTrackPath, checkFolder, fixPath
 from login import checkLogin, login
 from mutagen import mp3, easyid3
 
@@ -36,19 +36,31 @@ def checkSettings():
 
 
 def build_menu_download_playlist(li, playlist_id):
-	command = (
+	li.addContextMenuItems([(
 		'Download tracks',
 		'XBMC.Container.Update(%s)' % build_url2(mode='download_playlist', playlist_id=playlist_id),
-	)
-	li.addContextMenuItems([command])
+	)])
+
+
+def build_menu_download_artist(li, artist_id):
+	li.addContextMenuItems([(
+		'Download all tracks',
+		'XBMC.Container.Update(%s)' % build_url2(mode='download_artist', artist_id=artist_id),
+	)])
+
+
+def build_menu_download_album(li, album_id):
+	li.addContextMenuItems([(
+		'Download all tracks',
+		'XBMC.Container.Update(%s)' % build_url2(mode='download_album', album_id=album_id),
+	)])
 
 
 def build_menu_download_user_likes(li):
-	command = (
+	li.addContextMenuItems([(
 		'Download all',
 		'XBMC.Container.Update(%s)' % build_url2(mode='download_user_likes'),
-	)
-	li.addContextMenuItems([command])
+	)])
 
 
 def build_menu_track(li, track):
@@ -149,6 +161,7 @@ def build_item_artist(artist, titleFormat="%s"):
 	li = xbmcgui.ListItem(label=titleFormat % artist.name, thumbnailImage=img_url)
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'artist', 'artist_id': artist.id, 'title': artist.name})
+	build_menu_download_artist(li, artist.id)
 	return url, li, True
 
 
@@ -164,23 +177,7 @@ def build_item_album(album, titleFormat="%s"):
 	li = xbmcgui.ListItem(label=titleFormat % album.title, thumbnailImage=img_url)
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'album', 'album_id': album.id, 'title': album.title})
-	return url, li, True
-
-
-def build_item_video(video, titleFormat="%s"):
-	li = xbmcgui.ListItem(label=titleFormat % video.title, thumbnailImage=video.thumbnail_url)
-	# li.setProperty('fanart_image', "")
-	data = {
-		'mode': 'video',
-		'title': video.title,
-		'youtube_url': video.youtube_url,
-		'thumbnail_url': video.thumbnail_url,
-		'duration': video.duration,
-		'text': video.text,
-		'html_auto_play_video_player': video.html_auto_play_video_player,
-		'regions': video.regions,
-	}
-	url = build_url(data)
+	build_menu_download_album(li, album.id)
 	return url, li, True
 
 
@@ -221,7 +218,6 @@ def build_album(client, album_id):
 	album = client.albums_with_tracks(album_id)
 	tracks = [track for volume in album.volumes for track in volume]
 
-	# elements = [build_download_all_item(tracks)]
 	elements = [build_item_track(t) for t in tracks]
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
@@ -251,15 +247,6 @@ def build_artist(client, artist_id):
 		item = build_item_simple("Show All [%s] Albums" % counts.direct_albums, artist_id, "show_all_albums", True)
 		elements.append(item)
 
-	# all tracks
-	# tracks = artist_brief.popular_tracks
-	# showAllTracks = len(tracks) < counts.tracks
-	# if showAllTracks:
-	# 	item = build_item_simple("Show All [%s] Tracks" % counts.tracks, artist_id, "show_all_tracks", True)
-	# 	elements.append(item)
-	#
-	# elements += [build_item_track(track) for track in tracks]
-
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
 
@@ -268,7 +255,6 @@ def build_all_tracks(client, artist_id):
 	artist = client.artists([artist_id])[0]
 	artist_tracks = client.artists_tracks(artist_id, page=0, page_size=artist.counts.tracks)
 	tracks = artist_tracks.tracks
-	# elements = [build_download_all_item(tracks)]
 	elements = [build_item_track(t) for t in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -279,19 +265,16 @@ def build_playlist(client, playlist_id):
 	tracksShort = client.users_playlists(kind=kind, user_id=uid)[0].tracks
 	tracks = client.tracks([t.track_id for t in tracksShort])
 
-	# TODO: replace
-	# tracks = ",".join([t.track_id for t in tracks])
-	# build_simple_item("Play All", tracks, "download_and_play")
-	# elements = [build_download_all_item(tracks)]
-
 	elements = [build_item_track(track) for track in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle, cacheToDisc=False)
 
+	if tracks:
+		sendPlayTrack(client, tracks[0])
+
 
 def build_likes(client):
 	tracks = client.tracks([t.track_id for t in client.users_likes_tracks()])
-	# elements = [build_download_all_item(tracks)]
 	elements = [build_item_track(track) for track in tracks]
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -307,7 +290,6 @@ def build_search(client):
 		"artists": build_item_artist,
 		"playlists": build_item_playlist,
 		"tracks": build_item_track,
-		"videos": build_item_video,
 	}
 
 	templates = {
@@ -353,6 +335,17 @@ def download_playlist(client, playlist_id):
 	download_all(client, [t.track_id for t in tracksShort])
 
 
+def download_artist(client, artist_id):
+	artist = client.artists([artist_id])[0]
+	artist_tracks = client.artists_tracks(artist_id, page=0, page_size=artist.counts.tracks)
+	download_all(client, [t.track_id for t in artist_tracks.tracks])
+
+
+def download_album(client, album_id):
+	album = client.albums_with_tracks(album_id)
+	download_all(client, [track.track_id for volume in album.volumes for track in volume])
+
+
 def download_all(client, track_ids):
 	tracks = client.tracks(track_ids)
 	li = xbmcgui.ListItem()
@@ -396,6 +389,12 @@ def main():
 		download_playlist(client, playlist_id)
 	elif mode[0] == 'download_user_likes':
 		download_user_likes(client)
+	elif mode[0] == 'download_artist':
+		artist_id = args['artist_id'][0]
+		download_artist(client, artist_id)
+	elif mode[0] == 'download_album':
+		album_id = args['album_id'][0]
+		download_album(client, album_id)
 	elif mode[0] == 'album':
 		album_id = args['album_id'][0]
 		build_album(client, album_id)
@@ -415,20 +414,24 @@ def main():
 # misc
 
 def sendPlayTrack(client, track):
+	if not track.duration_ms:
+		return
+
 	play_id = "1354-123-123123-123"
 	album_id = track.albums[0].id if track.albums else 0
-	client.play_audio(
-		from_="web-own_playlists-playlist-playlist-main",
-		track_id=track.track_id,
-		album_id=album_id,
-		play_id=play_id,
-		track_length_seconds=0,
-		total_played_seconds=0,
-		end_position_seconds=track.duration_ms / 1000,
-	)
+	from_ = "desktop_win-home-playlist_of_the_day-playlist-default"
+	# client.play_audio(
+	# 	from_=from_,
+	# 	track_id=track.track_id,
+	# 	album_id=album_id,
+	# 	play_id=play_id,
+	# 	track_length_seconds=0,
+	# 	total_played_seconds=0,
+	# 	end_position_seconds=track.duration_ms / 1000,
+	# )
 
 	client.play_audio(
-		from_="web-own_playlists-playlist-playlist-main",
+		from_=from_,
 		track_id=track.track_id,
 		album_id=album_id,
 		play_id=play_id,
@@ -436,7 +439,9 @@ def sendPlayTrack(client, track):
 		total_played_seconds=track.duration_ms / 1000,
 		end_position_seconds=track.duration_ms / 1000,
 	)
-	notify("Notify play", "play: " + track.track_id)
+
+	# notify("Notify play", "play: " + track.track_id)
+	pass
 
 
 def getUrl(track):
@@ -473,8 +478,6 @@ def download_track(track):
 	download_dir = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(download_dir, track)
 	if not downloaded:
-		# log("start download: %s" % path)
-		# try:
 		checkFolder(folder)
 		track.download(fixPath(path))
 		audio = mp3.MP3(path, ID3=easyid3.EasyID3)
@@ -488,34 +491,8 @@ def download_track(track):
 			audio["date"] = str(track.albums[0].year)
 			audio["genre"] = track.albums[0].genre
 		audio.save()
-		notify("Download", "Done: %s" % path, 1)
-	# except Exception as ex:
-	# 	notify("Download", "Fail download: %s" % path)
-	# 	log("Fail download: %s. ex: %s" % (path, ex))
-	# 	return None
-
+		# notify("Download", "Done: %s" % path, 1)
 	return path
-
-
-def saveTracks(tracks):
-	import os
-	path = checkFolder("/addon_data/")
-	path = os.path.join(path, "tracks.txt")
-	f = open(path, "w")
-	f.write(",".join([t.track_id for t in tracks]))
-	f.close()
-
-
-def loadTracks():
-	import os
-	path = checkFolder("/addon_data/")
-	path = os.path.join(path, "tracks.txt")
-	if not exists(path):
-		return []
-	f = open(path, "r")
-	result = f.read()
-	f.close()
-	return result.split(",")
 
 
 def notify(title, msg, duration=1):
@@ -537,42 +514,3 @@ if __name__ == '__main__':
 	log("sys.argv: %s" % sys.argv)
 	addon_handle = int(sys.argv[1])
 	main()
-
-# elif mode[0] == 'play_all':
-# 	tracks_ids = args['tracks'][0].split(",")
-# 	play_all(client, tracks_ids)
-
-# def play_all(client, track_ids):
-# 	tracks = client.tracks(track_ids)
-# 	do_createPlaylist(tracks)
-# 	li = xbmcgui.ListItem()
-# 	xbmcplugin.setResolvedUrl(addon_handle, False, listitem=li)
-
-# def do_createPlaylist(tracks):
-# 	notify("Playlist", "Crating Playlist", 5)
-# 	playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-#
-# 	for index in range(len(tracks)):
-# 		track = tracks[index]
-# 		prefixPath = settings.getSetting('folder')
-# 		downloaded, path = getTrackPath(prefixPath, track)
-# 		url, li, isFolder = build_track_item(track)
-# 		li.setPath(path if downloaded else getUrl(track))
-# 		playlist.add(path, li, index)
-#
-# 	notify("Playlist", "Playlist created.\n Play now.", 5)
-# 	xbmc.Player().play(playlist)
-# def build_download_all_item(tracks):
-# 	tracks = ",".join([t.track_id for t in tracks])
-# 	li = xbmcgui.ListItem(label="[Download All]", thumbnailImage="")
-# 	li.setProperty('IsPlayable', 'false')
-# 	url = build_url({'mode': 'download_all', 'tracks': tracks, 'title': "Download All"})
-# 	return url, li, False
-#
-
-# def build_play_all_item(tracks):
-# 	tracks = ",".join([t.track_id for t in tracks])
-# 	li = xbmcgui.ListItem(label="[Play All]", thumbnailImage="")
-# 	li.setProperty('IsPlayable', 'false')
-# 	url = build_url({'mode': 'play_all', 'tracks': tracks, 'title': "Play All"})
-# 	return url, li, False

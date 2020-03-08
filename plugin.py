@@ -70,11 +70,37 @@ def build_download_all_item(tracks):
 def build_track_item(track, titleFormat="%s"):
 	prefixPath = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(prefixPath, track)
-	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage="")
-	li.setProperty('fanart_image', "")
+	if track.cover_uri:
+		img_url = "https://%s" % (track.cover_uri.replace("%%", "460x460"))
+	elif track.albums and track.albums[0].cover_uri:
+		img_url = "https://%s" % (track.albums[0].cover_uri.replace("%%", "460x460"))
+	elif track.artists:
+		cover = track.artists[0].cover
+		img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
+	else:
+		img_url = ""
+
+	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url)
+	li.setProperty('fanart_image', img_url)
 	li.setProperty('IsPlayable', 'true')
-	albumName = track.albums[0].title if track.albums else ""
-	li.setInfo("music", {'Title': track.title, 'Album': albumName})
+	info = {
+		"title": track.title,
+		"mediatype": "music",
+		# "lyrics": "(On a dark desert highway...)"
+	}
+	if track.duration_ms:
+		info["duration"] = int(track.duration_ms / 1000)
+	if track.artists:
+		info["artist"] = track.artists[0].name
+	if track.albums:
+		album = track.albums[0]
+		info["album"] = album.title
+		if album.track_position:
+			info["tracknumber"] = str(album.track_position.index)
+			info["discnumber"] = str(album.track_position.volume)
+		info["year"] = str(album.year)
+		info["genre"] = album.genre
+	li.setInfo("music", info)
 	url = path if downloaded else build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
 
 	commands = []
@@ -97,8 +123,15 @@ def build_track_item(track, titleFormat="%s"):
 
 
 def build_playlist_item(playlist, titleFormat="%s"):
-	li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage="")
-	# li.setProperty('fanart_image', "")
+
+	if playlist.animated_cover_uri:
+		img_url = "https://%s" % (playlist.animated_cover_uri.replace("%%", "460x460"))
+	else:
+		cover = playlist.cover
+		img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
+
+	li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage=img_url)
+	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'playlist', 'playlist_id': playlist.playlist_id, 'title': playlist.title})
 	return url, li, True
 
@@ -422,10 +455,10 @@ def download_track(track):
 			audio["genre"] = track.albums[0].genre
 		audio.save()
 		notify("Download", "Done: %s" % path, 1)
-		# except Exception as ex:
-		# 	notify("Download", "Fail download: %s" % path)
-		# 	log("Fail download: %s. ex: %s" % (path, ex))
-		# 	return None
+	# except Exception as ex:
+	# 	notify("Download", "Fail download: %s" % path)
+	# 	log("Fail download: %s. ex: %s" % (path, ex))
+	# 	return None
 
 	return path
 

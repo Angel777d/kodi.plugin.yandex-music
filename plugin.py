@@ -11,6 +11,7 @@ import xbmcplugin
 
 from Extentions import getTrackPath, checkFolder, fixPath, exists
 from login import checkLogin, login
+from mutagen import mp3, easyid3
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
 
@@ -68,7 +69,7 @@ def build_download_all_item(tracks):
 
 def build_track_item(track, titleFormat="%s"):
 	prefixPath = settings.getSetting('folder')
-	downloaded, path = getTrackPath(prefixPath, track)
+	downloaded, path, folder = getTrackPath(prefixPath, track)
 	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage="")
 	li.setProperty('fanart_image', "")
 	li.setProperty('IsPlayable', 'true')
@@ -281,7 +282,7 @@ def build_search(client):
 def play_track(client, track_id):
 	track = client.tracks([track_id])[0]
 	prefixPath = settings.getSetting('folder')
-	downloaded, path = getTrackPath(prefixPath, track)
+	downloaded, path, folder = getTrackPath(prefixPath, track)
 	li = xbmcgui.ListItem(path=path if downloaded else getUrl(track))
 	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
 
@@ -403,16 +404,28 @@ def getSortedResults(search):
 
 def download_track(track):
 	download_dir = settings.getSetting('folder')
-	exist, path = getTrackPath(download_dir, track)
-	log("start download: %s" % path)
-	if not exist:
-		try:
-			track.download(fixPath(path))
-			notify("Download", "Done: %s" % path, 1)
-		except Exception as ex:
-			notify("Download", "Fail download: %s" % path)
-			log("Fail download: %s. ex: %s" % (path, ex))
-			return None
+	downloaded, path, folder = getTrackPath(download_dir, track)
+	if not downloaded:
+		# log("start download: %s" % path)
+		# try:
+		checkFolder(folder)
+		track.download(fixPath(path))
+		audio = mp3.MP3(path, ID3=easyid3.EasyID3)
+		audio["title"] = track.title
+		audio["length"] = str(track.duration_ms)
+		if track.artists:
+			audio["artist"] = track.artists[0].name
+		if track.albums:
+			audio["album"] = track.albums[0].title
+			audio["tracknumber"] = str(track.albums[0].track_position.index)
+			audio["date"] = str(track.albums[0].year)
+			audio["genre"] = track.albums[0].genre
+		audio.save()
+		notify("Download", "Done: %s" % path, 1)
+		# except Exception as ex:
+		# 	notify("Download", "Fail download: %s" % path)
+		# 	log("Fail download: %s. ex: %s" % (path, ex))
+		# 	return None
 
 	return path
 

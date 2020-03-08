@@ -26,7 +26,7 @@ def _trackSimpleData(track):
 	return title, album, artist
 
 
-def folder(track):
+def get_folder(track):
 	title, album, artist = _trackSimpleData(track)
 
 	if album:
@@ -34,7 +34,7 @@ def folder(track):
 	return artist
 
 
-def filename(track):
+def get_filename(track):
 	title, album, artist = _trackSimpleData(track)
 	title = "".join(["_" if c in _EXCLUDED else c for c in title])
 	return "%s.mp3" % title
@@ -45,15 +45,13 @@ def exists(path):
 
 
 def getTrackPath(prefixPath, track):
-	path = checkFolder(os.path.join(prefixPath, folder(track)))
-	f = filename(track)
-	path = os.path.join(path, f)
-	path = os.path.normpath(path)
-	return exists(path), path
+	folder = os.path.join(prefixPath, get_folder(track))
+	f = get_filename(track)
+	path = os.path.join(folder, f)
+	return exists(path), os.path.normpath(path), folder
 
 
 def checkFolder(path):
-	path = os.path.normpath(path)
 	if not exists(path):
 		os.makedirs(fixPath(path))
 	return path

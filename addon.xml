@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.yandex-music" name="yandex-music" version="0.0.1" provider-name="me">
+<addon id="plugin.yandex-music" name="yandex-music" version="0.0.12" provider-name="me">
     <requires>
         <import addon="xbmc.python" version="2.25.0"/>
         <import addon="script.module.yandex-music" version="0.0.16"/>

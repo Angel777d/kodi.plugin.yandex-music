@@ -9,6 +9,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
+import Radio
 from Extentions import getTrackPath, checkFolder, fixPath
 from login import checkLogin, login
 from mutagen import mp3, easyid3
@@ -97,7 +98,7 @@ def build_item_simple(title, data, mode, isFolder=False):
 	return url, li, isFolder
 
 
-def build_item_track(track, titleFormat="%s"):
+def build_item_track(track, titleFormat="%s", force_url=False):
 	prefixPath = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(prefixPath, track)
 	if track.cover_uri:
@@ -131,7 +132,12 @@ def build_item_track(track, titleFormat="%s"):
 		info["year"] = str(album.year)
 		info["genre"] = album.genre
 	li.setInfo("music", info)
-	url = path if downloaded else build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
+	if downloaded:
+		url = path
+	elif force_url:
+		url = getUrl(track)
+	else:
+		url = build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
 	build_menu_track(li, track)
 
 	return url, li, False
@@ -187,6 +193,12 @@ def build_main(authorized, client):
 	url = build_url({'mode': 'search', 'title': "Search"})
 	entry_list = [(url, li, True), ]
 
+	# Show Radio
+	li = xbmcgui.ListItem(label="Radio", thumbnailImage="")
+	# li.setProperty('fanart_image', "")
+	url = build_url({'mode': 'radio', 'title': "Radio"})
+	entry_list.append((url, li, True))
+
 	if authorized:
 		# Show user like item
 		li = xbmcgui.ListItem(label="User Likes", thumbnailImage="")
@@ -212,6 +224,72 @@ def build_main(authorized, client):
 
 	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
 	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
+
+
+def build_radio(client):
+	stations = Radio.make_structure(client)
+	elements = []
+	for key in stations.keys():
+		li = xbmcgui.ListItem(label=key, thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'radio_type', 'title': key, "radio_type": key})
+		elements.append((url, li, True))
+
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_radio_type(client, radio_type):
+	stations = Radio.make_structure(client)
+	elements = []
+	for key in stations[radio_type].keys():
+		li = xbmcgui.ListItem(label=key, thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'radio_station', 'title': key, "radio_type": radio_type, "station_key": key})
+		elements.append((url, li, True))
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_radio_station(client, radio_type, station_key):
+	stations = Radio.make_structure(client)
+	station = stations[radio_type][station_key]
+	station_id = station.getId()
+	station_from = station.source.station.id_for_from
+	index, play_id, batch_id, track_ids = Radio.start_radio(client, station_id, station_from)
+
+	play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from)
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_radio_play_next(client, index, play_id, batch_id, track_ids, station_id, station_from):
+	index, play_id, batch_id, track_ids = Radio.play_next(client, station_id, station_from, index, play_id, batch_id, track_ids)
+	play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from)
+
+
+def play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from):
+	# log("index: %s, batch_id: %s, track_ids: %s" % (index, batch_id, track_ids))
+	track = client.tracks([track_ids[index]])[0]
+	songUrl, songItem, isFolder = build_item_track(track, "Radio: %s", True)
+
+	pl = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+	pl.add(songUrl, songItem, 1)
+
+	url = build_url({
+		'mode': 'radio_play_next',
+		'title': "Play Next",
+		"index": index,
+		"play_id": play_id,
+		"batch_id": batch_id,
+		"track_ids": track_ids,
+		"station_id": station_id,
+		"station_from": station_from,
+	})
+
+	li = xbmcgui.ListItem(label="NextSong", thumbnailImage="", path=url)
+	pl.add(url, li, 2)
+
+	xbmc.Player().play(pl)
 
 
 def build_album(client, album_id):
@@ -409,6 +487,23 @@ def main():
 	elif mode[0] == 'show_all_tracks':
 		album_id = args['data'][0]
 		build_all_tracks(client, album_id)
+	elif mode[0] == 'radio':
+		build_radio(client)
+	elif mode[0] == 'radio_type':
+		radio_type = args["radio_type"][0]
+		build_radio_type(client, radio_type)
+	elif mode[0] == 'radio_station':
+		radio_type = args["radio_type"][0]
+		station_key = args["station_key"][0]
+		build_radio_station(client, radio_type, station_key)
+	elif mode[0] == 'radio_play_next':
+		index = int(args["index"][0])
+		play_id = args["play_id"][0]
+		batch_id = args["batch_id"][0]
+		track_ids = args["track_ids"]
+		station_id = args["station_id"][0]
+		station_from = args["station_from"][0]
+		build_radio_play_next(client, index, play_id, batch_id, track_ids, station_id, station_from)
 
 
 # misc
@@ -491,7 +586,7 @@ def download_track(track):
 			audio["date"] = str(track.albums[0].year)
 			audio["genre"] = track.albums[0].genre
 		audio.save()
-		# notify("Download", "Done: %s" % path, 1)
+	# notify("Download", "Done: %s" % path, 1)
 	return path
 
 

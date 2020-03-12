@@ -3,6 +3,7 @@ import sys
 import urllib
 import urlparse
 from threading import Thread
+from time import sleep
 
 import xbmc
 import xbmcaddon
@@ -263,7 +264,8 @@ def build_radio_station(client, radio_type, station_key):
 
 
 def build_radio_play_next(client, index, play_id, batch_id, track_ids, station_id, station_from):
-	index, play_id, batch_id, track_ids = Radio.play_next(client, station_id, station_from, index, play_id, batch_id, track_ids)
+	index, play_id, batch_id, track_ids = Radio.play_next(client, station_id, station_from, index, play_id, batch_id,
+														  track_ids)
 	play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from)
 
 
@@ -287,9 +289,16 @@ def play_radio_track(client, index, play_id, batch_id, track_ids, station_id, st
 	})
 
 	li = xbmcgui.ListItem(label="NextSong", thumbnailImage="", path=url)
+	li.setProperty('IsPlayable', 'true')
 	pl.add(url, li, 2)
 
-	xbmc.Player().play(pl)
+	xbmc.Player().stop()
+
+	def doPlay(playlist):
+		sleep(1)
+		xbmc.Player().play(playlist)
+
+	Thread(target=doPlay, args=(pl,)).start()
 
 
 def build_album(client, album_id):

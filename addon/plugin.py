@@ -194,13 +194,13 @@ def build_main(authorized, client):
 	url = build_url({'mode': 'search', 'title': "Search"})
 	entry_list = [(url, li, True), ]
 
-	# Show Radio
-	li = xbmcgui.ListItem(label="Radio", thumbnailImage="")
-	# li.setProperty('fanart_image', "")
-	url = build_url({'mode': 'radio', 'title': "Radio"})
-	entry_list.append((url, li, True))
-
 	if authorized:
+		# Show Radio
+		li = xbmcgui.ListItem(label="Radio", thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'radio', 'title': "Radio"})
+		entry_list.append((url, li, True))
+
 		# Show user like item
 		li = xbmcgui.ListItem(label="User Likes", thumbnailImage="")
 		# li.setProperty('fanart_image', "")

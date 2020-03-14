@@ -379,11 +379,14 @@ def main():
 	xbmcplugin.setContent(addon_handle, 'songs')
 
 	if mode is None:
-		updateStatus(client)
+		if authorized:
+			updateStatus(client)
 		build_main(authorized, client)
 	elif mode[0] == 'login':
-		login(settings)
-		build_main(*checkLogin(settings))
+		if not authorized:
+			login(settings)
+		authorized, client = checkLogin(settings)
+		build_main(authorized, client)
 	elif mode[0] == 'search':
 		build_search(client)
 	elif mode[0] == 'like':

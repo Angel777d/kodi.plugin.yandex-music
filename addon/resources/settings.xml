@@ -8,7 +8,6 @@
     <category label="32030">
         <setting label="32031" id="token" type="text" default=""/>
         <setting label="32032" type="text" id="username" default=""/>
-        <setting label="32033" type="text" id="password" default=""/>
     </category>
 
 </settings>

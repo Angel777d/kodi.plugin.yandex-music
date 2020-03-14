@@ -34,10 +34,6 @@ def login(settings):
 		return True
 
 	username = settings.getSetting("username")
-	password = settings.getSetting("password")
-
-	if doLogin(settings, username, password):
-		return True
 
 	while True:
 		username, password = getLoginPassword(settings)
@@ -67,7 +63,6 @@ def doLogin(settings, username, password):
 
 def getLoginPassword(settings):
 	username = settings.getSetting("username")
-	password = settings.getSetting("password")
 
 	if not username:
 		heading = tr(32101)
@@ -75,7 +70,6 @@ def getLoginPassword(settings):
 		settings.setSetting('username', username)
 
 	heading = tr(32102)
-	password = xbmcgui.Dialog().input(heading, type=xbmcgui.INPUT_ALPHANUM, defaultt=password)
-	settings.setSetting('password', password)
+	password = xbmcgui.Dialog().input(heading, type=xbmcgui.INPUT_ALPHANUM)
 
 	return username, password

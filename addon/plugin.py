@@ -3,23 +3,24 @@ import sys
 import urllib
 import urlparse
 from threading import Thread
-from time import sleep
 
 import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
-import Radio
-from Extentions import getTrackPath, checkFolder, fixPath
-from login import checkLogin, login
+import radio
+from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url
 from mutagen import mp3, easyid3
+from yandex_service import checkLogin, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
+SERVICE_SCRIPT = "special://home/addons/plugin.yandex-music/service.py"
 
 
-def build_url(query):
-	base_url = sys.argv[0]
+def build_url(query, base_url=None):
+	if not base_url:
+		base_url = sys.argv[0]
 	return base_url + '?' + urllib.urlencode(query, 'utf-8')
 
 
@@ -102,43 +103,14 @@ def build_item_simple(title, data, mode, isFolder=False):
 def build_item_track(track, titleFormat="%s", force_url=False):
 	prefixPath = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(prefixPath, track)
-	if track.cover_uri:
-		img_url = "https://%s" % (track.cover_uri.replace("%%", "460x460"))
-	elif track.albums and track.albums[0].cover_uri:
-		img_url = "https://%s" % (track.albums[0].cover_uri.replace("%%", "460x460"))
-	elif track.artists and track.artists[0].cover:
-		cover = track.artists[0].cover
-		img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
-	else:
-		img_url = ""
 
-	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url)
-	li.setProperty('fanart_image', img_url)
-	li.setProperty('IsPlayable', 'true')
-	info = {
-		"title": track.title,
-		"mediatype": "music",
-		# "lyrics": "(On a dark desert highway...)"
-	}
-	if track.duration_ms:
-		info["duration"] = int(track.duration_ms / 1000)
-	if track.artists:
-		info["artist"] = track.artists[0].name
-	if track.albums:
-		album = track.albums[0]
-		info["album"] = album.title
-		if album.track_position:
-			info["tracknumber"] = str(album.track_position.index)
-			info["discnumber"] = str(album.track_position.volume)
-		info["year"] = str(album.year)
-		info["genre"] = album.genre
-	li.setInfo("music", info)
 	if downloaded:
 		url = path
 	elif force_url:
-		url = getUrl(track)
+		url = get_track_url(track)
 	else:
 		url = build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
+	li = create_track_list_item(track, titleFormat)
 	build_menu_track(li, track)
 
 	return url, li, False
@@ -228,7 +200,7 @@ def build_main(authorized, client):
 
 
 def build_radio(client):
-	stations = Radio.make_structure(client)
+	stations = radio.make_structure(client)
 	elements = []
 	for key in stations.keys():
 		li = xbmcgui.ListItem(label=key, thumbnailImage="")
@@ -241,7 +213,7 @@ def build_radio(client):
 
 
 def build_radio_type(client, radio_type):
-	stations = Radio.make_structure(client)
+	stations = radio.make_structure(client)
 	elements = []
 	for key in stations[radio_type].keys():
 		li = xbmcgui.ListItem(label=key, thumbnailImage="")
@@ -250,55 +222,6 @@ def build_radio_type(client, radio_type):
 		elements.append((url, li, True))
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
-
-
-def build_radio_station(client, radio_type, station_key):
-	stations = Radio.make_structure(client)
-	station = stations[radio_type][station_key]
-	station_id = station.getId()
-	station_from = station.source.station.id_for_from
-	index, play_id, batch_id, track_ids = Radio.start_radio(client, station_id, station_from)
-
-	play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from)
-	xbmcplugin.endOfDirectory(addon_handle)
-
-
-def build_radio_play_next(client, index, play_id, batch_id, track_ids, station_id, station_from):
-	index, play_id, batch_id, track_ids = Radio.play_next(client, station_id, station_from, index, play_id, batch_id,
-														  track_ids)
-	play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from)
-
-
-def play_radio_track(client, index, play_id, batch_id, track_ids, station_id, station_from):
-	# log("index: %s, batch_id: %s, track_ids: %s" % (index, batch_id, track_ids))
-	track = client.tracks([track_ids[index]])[0]
-	songUrl, songItem, isFolder = build_item_track(track, "Radio: %s", True)
-
-	pl = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-	pl.add(songUrl, songItem, 1)
-
-	url = build_url({
-		'mode': 'radio_play_next',
-		'title': "Play Next",
-		"index": index,
-		"play_id": play_id,
-		"batch_id": batch_id,
-		"track_ids": track_ids,
-		"station_id": station_id,
-		"station_from": station_from,
-	})
-
-	li = xbmcgui.ListItem(label="NextSong", thumbnailImage="", path=url)
-	li.setProperty('IsPlayable', 'true')
-	pl.add(url, li, 2)
-
-	xbmc.Player().stop()
-
-	def doPlay(playlist):
-		sleep(1)
-		xbmc.Player().play(playlist)
-
-	Thread(target=doPlay, args=(pl,)).start()
 
 
 def build_album(client, album_id):
@@ -402,7 +325,7 @@ def play_track(client, track_id):
 	track = client.tracks([track_id])[0]
 	prefixPath = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(prefixPath, track)
-	li = xbmcgui.ListItem(path=path if downloaded else getUrl(track))
+	li = xbmcgui.ListItem(path=path if downloaded else get_track_url(track))
 	xbmcplugin.setResolvedUrl(addon_handle, True, listitem=li)
 
 	sendPlayTrack(client, track)
@@ -443,9 +366,12 @@ def download_all(client, track_ids):
 
 
 def main():
+	# Stop Radio script on any change
+	xbmc.executebuiltin("StopScript(%s)" % SERVICE_SCRIPT)
+
 	checkSettings()
 	authorized, client = checkLogin(settings)
-	log("authorized: %s" % authorized)
+	# log("authorized: %s" % authorized)
 
 	args = urlparse.parse_qs(sys.argv[2][1:])
 	mode = args.get('mode', None)
@@ -504,19 +430,10 @@ def main():
 	elif mode[0] == 'radio_station':
 		radio_type = args["radio_type"][0]
 		station_key = args["station_key"][0]
-		build_radio_station(client, radio_type, station_key)
-	elif mode[0] == 'radio_play_next':
-		index = int(args["index"][0])
-		play_id = args["play_id"][0]
-		batch_id = args["batch_id"][0]
-		track_ids = args["track_ids"]
-		station_id = args["station_id"][0]
-		station_from = args["station_from"][0]
-		build_radio_play_next(client, index, play_id, batch_id, track_ids, station_id, station_from)
+		xbmc.executebuiltin("RunScript(%s, %s, %s)" % (SERVICE_SCRIPT, radio_type, station_key))
 
 
 # misc
-
 def sendPlayTrack(client, track):
 	if not track.duration_ms:
 		return
@@ -546,12 +463,6 @@ def sendPlayTrack(client, track):
 
 	# notify("Notify play", "play: " + track.track_id)
 	pass
-
-
-def getUrl(track):
-	dInfo = [d for d in track.get_download_info() if (d.codec == "mp3" and d.bitrate_in_kbps == 192)][0]
-	dInfo.get_direct_link()
-	return dInfo.direct_link
 
 
 def do_download(tracks):

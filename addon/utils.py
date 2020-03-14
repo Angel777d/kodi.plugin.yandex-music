@@ -1,7 +1,43 @@
-# coding=utf-8
-
 import os
 import platform
+
+import xbmcgui
+
+
+def create_track_list_item(track, titleFormat="%s"):
+	if track.cover_uri:
+		img_url = "https://%s" % (track.cover_uri.replace("%%", "460x460"))
+	elif track.albums and track.albums[0].cover_uri:
+		img_url = "https://%s" % (track.albums[0].cover_uri.replace("%%", "460x460"))
+	elif track.artists and track.artists[0].cover:
+		cover = track.artists[0].cover
+		img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
+	else:
+		img_url = ""
+
+	li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url)
+	li.setProperty('fanart_image', img_url)
+	li.setProperty('IsPlayable', 'true')
+	info = {
+		"title": track.title,
+		"mediatype": "music",
+		# "lyrics": "(On a dark desert highway...)"
+	}
+	if track.duration_ms:
+		info["duration"] = int(track.duration_ms / 1000)
+	if track.artists:
+		info["artist"] = track.artists[0].name
+	if track.albums:
+		album = track.albums[0]
+		info["album"] = album.title
+		if album.track_position:
+			info["tracknumber"] = str(album.track_position.index)
+			info["discnumber"] = str(album.track_position.volume)
+		info["year"] = str(album.year)
+		info["genre"] = album.genre
+	li.setInfo("music", info)
+	return li
+
 
 plt = platform.system()
 
@@ -15,7 +51,6 @@ def fixLinux(path):
 
 
 fixPath = fixWindows if plt == "Windows" else fixLinux
-
 _EXCLUDED = ':/?|;.<>*"'
 
 
@@ -78,3 +113,9 @@ def getPlaylistCover(playlist):
 	if playlist.cover:
 		return playlist.cover.download, "playlist_%s_%s.jpg" % (playlist.playlistId, playlist.uid)
 	return None
+
+
+def get_track_url(track):
+	dInfo = [d for d in track.get_download_info() if (d.codec == "mp3" and d.bitrate_in_kbps == 192)][0]
+	dInfo.get_direct_link()
+	return dInfo.direct_link

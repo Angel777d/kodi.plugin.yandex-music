@@ -10,8 +10,8 @@ import xbmcgui
 import xbmcplugin
 
 import radio
-from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url
 from mutagen import mp3, easyid3
+from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url
 from yandex_service import checkLogin, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
@@ -199,14 +199,25 @@ def build_main(authorized, client):
 	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
 
 
+def build_item_radio_type(key):
+	li = xbmcgui.ListItem(label=key, thumbnailImage="")
+	# li.setProperty('fanart_image', "")
+	url = build_url({'mode': 'radio_type', 'title': key, "radio_type": key})
+	return url, li, True
+
+
+def build_item_radio_station(radio_type, key):
+	li = xbmcgui.ListItem(label=key, thumbnailImage="")
+	# li.setProperty('fanart_image', "")
+	url = build_url({'mode': 'radio_station', 'title': key, "radio_type": radio_type, "station_key": key})
+	return url, li, True
+
+
 def build_radio(client):
 	stations = radio.make_structure(client)
-	elements = []
-	for key in stations.keys():
-		li = xbmcgui.ListItem(label=key, thumbnailImage="")
-		# li.setProperty('fanart_image', "")
-		url = build_url({'mode': 'radio_type', 'title': key, "radio_type": key})
-		elements.append((url, li, True))
+
+	elements = [build_item_radio_station("dashboard", key) for key in radio.make_dashboard(client).keys()]
+	elements += [build_item_radio_type(key) for key in stations.keys()]
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -214,12 +225,8 @@ def build_radio(client):
 
 def build_radio_type(client, radio_type):
 	stations = radio.make_structure(client)
-	elements = []
-	for key in stations[radio_type].keys():
-		li = xbmcgui.ListItem(label=key, thumbnailImage="")
-		# li.setProperty('fanart_image', "")
-		url = build_url({'mode': 'radio_station', 'title': key, "radio_type": radio_type, "station_key": key})
-		elements.append((url, li, True))
+	elements = [build_item_radio_station(radio_type, key) for key in stations[radio_type].keys()]
+
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
 

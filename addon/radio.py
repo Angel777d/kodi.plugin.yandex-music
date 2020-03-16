@@ -106,23 +106,28 @@ def do_play_end(client, track, play_id, station_id, batch_id):
 
 
 def make_structure(client):
+	# status = client.rotor_account_status()
+	# genres = client.genres()
+	# genres_dict = {g.id: StationNode(g, "genre") for g in genres}
+
 	stations = client.rotor_stations_list()
 	types = {}
 	for s_info in stations:
 		type_container = types.setdefault(s_info.station.id.type, {})
 		type_container[s_info.station.id.tag] = StationNode(s_info)
 
-	root_genre = {}
+	types["genre"] = root_genre = {}
 	for k, v in types["genre"].items():
 		station = v.source.station
 		if station.parent_id:
-			assert station.parent_id.type == "genre", "WTF!!!???"
 			parent_tag = station.parent_id.tag
 			if station.parent_id.tag in types["genre"]:
 				types["genre"][parent_tag].children.append(v)
 		else:
 			root_genre[station.id.tag] = v
-
-	types["genre"] = root_genre
-
 	return types
+
+
+def make_dashboard(client):
+	dashboard = client.rotor_stations_dashboard()
+	return {s_info.station.id.tag: StationNode(s_info) for s_info in dashboard.stations}

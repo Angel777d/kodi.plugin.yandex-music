@@ -199,24 +199,36 @@ def build_main(authorized, client):
 	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
 
 
+def get_radio_group_name(key):
+	return {
+		'genre': "By Genre",
+		'mood': "By Mood",
+		'activity': "By Activity",
+		'epoch': "By Epoch",
+		'author': "By Author",
+		'local': "By Place",
+	}[key]
+
+
 def build_item_radio_type(key):
-	li = xbmcgui.ListItem(label=key, thumbnailImage="")
-	# li.setProperty('fanart_image', "")
-	url = build_url({'mode': 'radio_type', 'title': key, "radio_type": key})
+	title = get_radio_group_name(key)
+	li = xbmcgui.ListItem(label=title, thumbnailImage="")
+	url = build_url({'mode': 'radio_type', 'title': title, "radio_type": key})
 	return url, li, True
 
 
-def build_item_radio_station(radio_type, key):
-	li = xbmcgui.ListItem(label=key, thumbnailImage="")
-	# li.setProperty('fanart_image', "")
-	url = build_url({'mode': 'radio_station', 'title': key, "radio_type": radio_type, "station_key": key})
+def build_item_radio_station(radio_type, key, s_info):
+	title = s_info.getTitle()
+	li = xbmcgui.ListItem(label=title, thumbnailImage=s_info.getImage())
+	li.setProperty('fanart_image', s_info.getImage("460x460"))
+	url = build_url({'mode': 'radio_station', 'title': title, "radio_type": radio_type, "station_key": key})
 	return url, li, True
 
 
 def build_radio(client):
 	stations = radio.make_structure(client)
-
-	elements = [build_item_radio_station("dashboard", key) for key in radio.make_dashboard(client).keys()]
+	dashboard = radio.make_dashboard(client)
+	elements = [build_item_radio_station("dashboard", key, dashboard[key]) for key in dashboard.keys()]
 	elements += [build_item_radio_type(key) for key in stations.keys()]
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
@@ -224,8 +236,9 @@ def build_radio(client):
 
 
 def build_radio_type(client, radio_type):
-	stations = radio.make_structure(client)
-	elements = [build_item_radio_station(radio_type, key) for key in stations[radio_type].keys()]
+	stations = radio.make_structure(client)[radio_type]
+
+	elements = [build_item_radio_station(radio_type, key, stations[key]) for key in stations.keys()]
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)

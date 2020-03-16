@@ -68,6 +68,7 @@ class MyPlayer(xbmc.Player):
 			self.valid = (url in self.urls) and pl.size() == len(self.urls)
 			log("check valid: %s" % self.valid)
 		except Exception as ex:
+			self.valid = False
 			log("can't get current: %s" % ex)
 
 

@@ -9,6 +9,12 @@ class StationNode:
 	def getId(self):
 		return "%s:%s" % (self.source.station.id.type, self.source.station.id.tag)
 
+	def getTitle(self):
+		return self.source.station.name
+
+	def getImage(self, size='200x200'):
+		return self.source.station.icon.get_url(size)
+
 	def __repr__(self):
 		return "[StationNode] name: %s, children: %s" % (self.source.station.name, len(self.children))
 
@@ -106,17 +112,13 @@ def do_play_end(client, track, play_id, station_id, batch_id):
 
 
 def make_structure(client):
-	# status = client.rotor_account_status()
-	# genres = client.genres()
-	# genres_dict = {g.id: StationNode(g, "genre") for g in genres}
-
 	stations = client.rotor_stations_list()
 	types = {}
 	for s_info in stations:
 		type_container = types.setdefault(s_info.station.id.type, {})
 		type_container[s_info.station.id.tag] = StationNode(s_info)
 
-	types["genre"] = root_genre = {}
+	root_genre = {}
 	for k, v in types["genre"].items():
 		station = v.source.station
 		if station.parent_id:
@@ -125,6 +127,9 @@ def make_structure(client):
 				types["genre"][parent_tag].children.append(v)
 		else:
 			root_genre[station.id.tag] = v
+
+	types["genre"] = root_genre
+
 	return types
 
 

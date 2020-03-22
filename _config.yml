@@ -1,2 +1,6 @@
-logo: https://repository-images.githubusercontent.com/244736250/e56c5180-6666-11ea-889e-066975a332b4
+title: Kodi Yandex Music
+logo: /assets/img/kody_yandex_music_plugin.png
+description: Yandex Music Plugin for Kodi.
+show_downloads: true
+google_analytics:
 theme: jekyll-theme-minimal

@@ -3,6 +3,9 @@
 <settings>
     <category label="32010">
         <setting label="32011" type="folder" id="folder" source="music" option="writeable"/>
+        <setting label="32012" type="select" id="codec" lvalues="32013|32014"/>
+        <setting label="32015" type="bool" id="high_res" default="false"/>
+        <setting label="32016" type="bool" id="auto_download" default="false"/>
     </category>
 
     <category label="32030">

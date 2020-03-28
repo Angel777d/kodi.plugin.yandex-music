@@ -25,6 +25,25 @@ msgctxt "#32011"
 msgid "Download folder"
 msgstr ""
 
+msgctxt "#32012"
+msgid "Codec"
+msgstr ""
+
+msgctxt "#32013"
+msgid "mp3"
+msgstr ""
+
+msgctxt "#32014"
+msgid "aac"
+msgstr ""
+
+msgctxt "#32015"
+msgid "Prefer high res audio"
+msgstr ""
+
+msgctxt "#32016"
+msgid "Auto download playing files"
+msgstr ""
 
 msgctxt "#32030"
 msgid "Login"

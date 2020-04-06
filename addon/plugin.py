@@ -121,8 +121,7 @@ def build_item_playlist(playlist, titleFormat="%s"):
     if playlist.animated_cover_uri:
         img_url = "https://%s" % (playlist.animated_cover_uri.replace("%%", "460x460"))
     else:
-        cover = playlist.cover
-        img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
+        img_url = get_cover_img(playlist.cover)
 
     li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage=img_url)
     li.setProperty('fanart_image', img_url)
@@ -133,11 +132,7 @@ def build_item_playlist(playlist, titleFormat="%s"):
 
 
 def build_item_artist(artist, titleFormat="%s"):
-    if artist.cover:
-        img_url = "https://%s" % ((artist.cover.uri or artist.cover.items_uri[0]).replace("%%", "460x460"))
-    else:
-        img_url = ""
-
+    img_url = get_cover_img(artist.cover)
     li = xbmcgui.ListItem(label=titleFormat % artist.name, thumbnailImage=img_url)
     li.setProperty('fanart_image', img_url)
     url = build_url({'mode': 'artist', 'artist_id': artist.id, 'title': artist.name})
@@ -149,8 +144,7 @@ def build_item_album(album, titleFormat="%s"):
     if album.cover_uri:
         img_url = "https://%s" % (album.cover_uri.replace("%%", "460x460"))
     elif album.artists and album.artists[0].cover:
-        cover = album.artists[0].cover
-        img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
+        img_url = get_cover_img(album.artists[0].cover)
     else:
         img_url = ""
 
@@ -458,6 +452,19 @@ def main():
 
 
 # misc
+def get_cover_img(cover):
+    if not cover:
+        return ""
+    uri = ""
+    if cover.uri:
+        uri = cover.uri
+    elif cover.items_uri:
+        uri = cover.items_uri[0]
+    if uri:
+        return "https://%s" % uri.replace("%%", "460x460")
+    return ""
+
+
 def sendPlayTrack(client, track):
     if not track.duration_ms:
         return

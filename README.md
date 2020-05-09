@@ -14,10 +14,13 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 [ym_lib]: https://github.com/MarshalX/yandex-music-api
 
 #### Changelog
+##### Version 0.0.28
+1. Smart playlists update fixed
+
 ##### Version 0.0.27
 1. Get cover image crash fixed 
 
 ##### Version 0.0.26
 1. codec option added
-2. high res option added1
+2. high res option added
 3. auto download option added

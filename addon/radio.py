@@ -32,26 +32,31 @@ def start_radio(client, station_id, station_from):
 
 
 def play_next(client, station_id, station_from, index, play_id, batch_id, track_ids):
-	tracks = client.tracks(track_ids)
-	current = tracks[index]
+	track_id = track_ids[index]
+
+	try:
+		current = client.tracks([track_id])[0]
+	except BaseException as ex:
+		current = client.tracks([track_id])[0]
 
 	# finish
 	do_play_end(client, current, play_id, station_id, batch_id)
 
 	# get next
 	index += 1
-	if not (len(tracks) > index):
+	if index >= len(track_ids):
 		index = 0
 		station_tracks, batch_id = get_radio(client, station_id, current.track_id)
 		tracks = [t.track for t in station_tracks.sequence]
+		track_ids = [t.track_id for t in tracks]
 		client.rotor_station_feedback_radio_started(station=station_id, from_=station_from, batch_id=batch_id)
 
-	current = tracks[index]
+	current = client.tracks([track_ids[index]])[0]
 
 	# start
 	play_id = do_play_start(client, current, station_id, batch_id)
 
-	return index, play_id, batch_id, [t.track_id for t in tracks]
+	return index, play_id, batch_id, track_ids
 
 
 def get_radio(client, station_id, queue=None):

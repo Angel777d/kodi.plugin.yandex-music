@@ -3,6 +3,7 @@ import sys
 
 import xbmc
 import xbmcaddon
+from xbmc import sleep
 
 import radio
 from utils import create_track_list_item, get_track_url
@@ -21,12 +22,12 @@ class MyPlayer(xbmc.Player):
 		self.result = None
 		self.urls = []
 		self.valid = True
+		self.started = False
 		xbmc.Player.__init__(self, playerCore=playerCore)
 
-	def start(self, radio_type, station_key):
-		station = stations[radio_type][station_key]
-		self.station_id = station.getId()
-		self.station_from = station.source.station.id_for_from
+	def start(self, station_id, station_from):
+		self.station_id = station_id
+		self.station_from = station_from
 		self.result = radio.start_radio(client, self.station_id, self.station_from)
 		# add first track
 		self.add_next_track(self.result)
@@ -34,13 +35,11 @@ class MyPlayer(xbmc.Player):
 		self.queue_next()
 		# start playing
 		self.play(pl, startpos=0)
+		self.started = True
 
 	def queue_next(self):
-		try:
-			self.result = radio.play_next(client, self.station_id, self.station_from, *self.result)
-			self.add_next_track(self.result)
-		except Exception as ex:
-			pass
+		self.result = radio.play_next(client, self.station_id, self.station_from, *self.result)
+		self.add_next_track(self.result)
 
 	def add_next_track(self, play_info):
 		# log("Add track to playlist")
@@ -63,11 +62,14 @@ class MyPlayer(xbmc.Player):
 		self.queue_next()
 
 	def check(self):
+		if not self.started:
+			return
+
 		try:
 			url = self.getPlayingFile()
 			self.valid = (url in self.urls) and pl.size() == len(self.urls)
 			log("check valid: %s" % self.valid)
-		except Exception as ex:
+		except BaseException as ex:
 			self.valid = False
 			log("can't get current: %s" % ex)
 
@@ -111,8 +113,9 @@ if __name__ == '__main__':
 	token = settings.getSetting('token')
 
 	log(sys.argv)
-	radio_type_ = sys.argv[1]
-	station_key_ = sys.argv[2]
+	type_ = sys.argv[1]
+	radio_type_ = sys.argv[2]
+	station_key_ = sys.argv[3]
 
 	# get stations info
 	auth, client = checkLogin(settings)
@@ -125,8 +128,14 @@ if __name__ == '__main__':
 
 	# init player
 	player = MyPlayer()
-	player.start(radio_type_, station_key_)
 
+	if type_ == "custom":
+		player.start("%s:%s" % (radio_type_, station_key_), radio_type_)
+	else:
+		station = stations[radio_type_][station_key_]
+		player.start(station.getId(), station.source.station.id_for_from)
+
+	sleep(5)
 	while not monitor.abortRequested():
 		player.check()
 		if not player.valid:

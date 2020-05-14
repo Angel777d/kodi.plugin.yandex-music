@@ -47,17 +47,29 @@ def build_menu_download_playlist(li, playlist_id):
 
 
 def build_menu_download_artist(li, artist_id):
-    li.addContextMenuItems([(
-        'Download all tracks',
-        'XBMC.Container.Update(%s)' % build_url2(mode='download_artist', artist_id=artist_id),
-    )])
+    li.addContextMenuItems([
+        (
+            'Stream From Artist',
+            'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='artist', value=artist_id),
+        ),
+        (
+            'Download all tracks',
+            'XBMC.Container.Update(%s)' % build_url2(mode='download_artist', artist_id=artist_id),
+        )
+    ])
 
 
 def build_menu_download_album(li, album_id):
-    li.addContextMenuItems([(
-        'Download all tracks',
-        'XBMC.Container.Update(%s)' % build_url2(mode='download_album', album_id=album_id),
-    )])
+    li.addContextMenuItems([
+        (
+            'Stream From Album',
+            'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='album', value=album_id),
+        ),
+        (
+            'Download all tracks',
+            'XBMC.Container.Update(%s)' % build_url2(mode='download_album', album_id=album_id),
+        )
+    ])
 
 
 def build_menu_download_user_likes(li):
@@ -69,6 +81,12 @@ def build_menu_download_user_likes(li):
 
 def build_menu_track(li, track):
     commands = []
+
+    commands.append((
+        'Stream From Track',
+        'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='track', value=track.id),
+    ))
+
     if track.albums:
         album = track.albums[0]
         commands.append((
@@ -445,10 +463,15 @@ def main():
     elif mode[0] == 'radio_type':
         radio_type = args["radio_type"][0]
         build_radio_type(client, radio_type)
+    elif mode[0] == 'make_radio':
+        make_radio_type = args["type"][0]
+        make_radio_value = args["value"][0]
+        xbmc.executebuiltin("RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', make_radio_type, make_radio_value))
+
     elif mode[0] == 'radio_station':
         radio_type = args["radio_type"][0]
         station_key = args["station_key"][0]
-        xbmc.executebuiltin("RunScript(%s, %s, %s)" % (SERVICE_SCRIPT, radio_type, station_key))
+        xbmc.executebuiltin("RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'radio', radio_type, station_key))
 
 
 # misc

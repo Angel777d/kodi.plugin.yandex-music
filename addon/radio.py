@@ -70,7 +70,7 @@ def do_play_start(client, track, station_id, batch_id):
 	total_seconds = track.duration_ms / 1000
 	client.play_audio(
 		from_="desktop_win-home-playlist_of_the_day-playlist-default",
-		track_id=track.track_id,
+		track_id=track.id,
 		album_id=track.albums[0].id,
 		play_id=play_id,
 		track_length_seconds=0,
@@ -79,7 +79,7 @@ def do_play_start(client, track, station_id, batch_id):
 	)
 	client.rotor_station_feedback_track_started(
 		station=station_id,
-		track_id=track.track_id,
+		track_id=track.id,
 		batch_id=batch_id
 	)
 	return play_id
@@ -92,7 +92,7 @@ def do_play_end(client, track, play_id, station_id, batch_id):
 
 	client.play_audio(
 		from_="desktop_win-home-playlist_of_the_day-playlist-default",
-		track_id=track.track_id,
+		track_id=track.id,
 		album_id=track.albums[0].id,
 		play_id=play_id,
 		track_length_seconds=int(total_seconds),
@@ -102,7 +102,7 @@ def do_play_end(client, track, play_id, station_id, batch_id):
 
 	client.rotor_station_feedback_track_finished(
 		station=station_id,
-		track_id=track.track_id,
+		track_id=track.id,
 		total_played_seconds=played_seconds,
 		batch_id=batch_id
 	)

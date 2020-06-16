@@ -507,7 +507,7 @@ def sendPlayTrack(client, track):
 
     client.play_audio(
         from_=from_,
-        track_id=track.track_id,
+        track_id=track.id,
         album_id=album_id,
         play_id=play_id,
         track_length_seconds=int(track.duration_ms / 1000),

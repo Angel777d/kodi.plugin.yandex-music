@@ -119,8 +119,6 @@ if __name__ == '__main__':
 
 	# get stations info
 	auth, client = checkLogin(settings)
-	stations = radio.make_structure(client)
-	stations["dashboard"] = radio.make_dashboard(client)
 
 	# init playlist
 	pl = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
@@ -132,6 +130,8 @@ if __name__ == '__main__':
 	if type_ == "custom":
 		player.start("%s:%s" % (radio_type_, station_key_), radio_type_)
 	else:
+		stations = radio.make_structure(client)
+		stations["dashboard"] = radio.make_dashboard(client)
 		station = stations[radio_type_][station_key_]
 		player.start(station.getId(), station.source.station.id_for_from)
 

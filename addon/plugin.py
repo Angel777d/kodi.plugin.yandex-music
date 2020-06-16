@@ -12,7 +12,7 @@ import xbmcplugin
 import radio
 from mutagen import mp3, easyid3
 from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url, get_track_download_info, \
-	log, notify
+    log, notify
 from yandex_service import checkLogin, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
@@ -505,15 +505,17 @@ def sendPlayTrack(client, track):
     # 	end_position_seconds=track.duration_ms / 1000,
     # )
 
-    client.play_audio(
-        from_=from_,
-        track_id=track.id,
-        album_id=album_id,
-        play_id=play_id,
-        track_length_seconds=int(track.duration_ms / 1000),
-        total_played_seconds=track.duration_ms / 1000,
-        end_position_seconds=track.duration_ms / 1000,
-    )
+    import threading
+    t = threading.Thread(target=client.play_audio, kwargs={
+        "from_": from_,
+        "track_id": track.id,
+        "album_id": album_id,
+        "play_id": play_id,
+        "track_length_seconds": int(track.duration_ms / 1000),
+        "total_played_seconds": track.duration_ms / 1000,
+        "end_position_seconds": track.duration_ms / 1000
+    })
+    t.start()
 
     # notify("Notify play", "play: " + track.track_id)
     pass

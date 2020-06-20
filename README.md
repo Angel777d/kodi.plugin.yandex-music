@@ -14,6 +14,9 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 [ym_lib]: https://github.com/MarshalX/yandex-music-api
 
 #### Changelog
+##### Version 0.0.31
+1. Try to fix stream
+
 ##### Version 0.0.30
 1. Radio fixed
 

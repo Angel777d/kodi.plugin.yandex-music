@@ -1,3 +1,4 @@
+import threading
 from random import random
 
 
@@ -19,110 +20,152 @@ class StationNode:
         return "[StationNode] name: %s, children: %s" % (self.source.station.name, len(self.children))
 
 
-def start_radio(client, station_id, station_from):
-    index = 0
-    station_tracks, batch_id = get_radio(client, station_id)
-    client.rotor_station_feedback_radio_started(station=station_id, from_=station_from, batch_id=batch_id)
+class Radio:
+    def __init__(self, client, station_id, station_from):
+        self.client = client
+        self.station_id = station_id
+        self.station_from = station_from
+        self.batch_id = None
+        self.play_id = None
+        self.tracks = None
+        self.index = 0
 
-    tracks = [t.track for t in station_tracks.sequence]
-    current = tracks[index]
-    play_id = do_play_start(client, current, station_id, batch_id)
+    def start_radio(self):
+        station_tracks = self.client.rotor_station_tracks(self.station_id, queue=None)
+        self.tracks = self.client.tracks([t.track.track_id for t in station_tracks.sequence])
+        self.batch_id = station_tracks.batch_id
 
-    return index, play_id, batch_id, [t.track_id for t in tracks]
+        current = self.tracks[0]
+        self.play_id = self.__generate_play_id()
 
+        threading.Thread(target=self.__send_start_radio, kwargs={
+            "track": current,
+            "play_id": self.play_id,
+            "batch_id": self.batch_id,
+        }).start()
 
-def play_next(client, station_id, station_from, index, play_id, batch_id, track_ids):
-    track_id = track_ids[index]
+        return current
 
-    try:
-        current = client.tracks([track_id])[0]
-    except BaseException as ex:
-        current = client.tracks([track_id])[0]
+    def play_next(self):
+        current = self.tracks[self.index]
 
-    # finish
-    do_play_end(client, current, play_id, station_id, batch_id)
+        # finish
+        play_end_kwargs = {
+            "track": current,
+            "play_id": self.play_id,
+            "batch_id": self.batch_id,
+        }
 
-    # get next
-    index += 1
-    if index >= len(track_ids):
-        index = 0
-        station_tracks, batch_id = get_radio(client, station_id, current.track_id)
-        tracks = [t.track for t in station_tracks.sequence]
-        track_ids = [t.track_id for t in tracks]
-        client.rotor_station_feedback_radio_started(station=station_id, from_=station_from, batch_id=batch_id)
+        # get next
+        self.index += 1
+        next_function = self.__do_play_start
+        if self.index >= len(self.tracks):
+            self.index = 0
+            station_tracks = self.client.rotor_station_tracks(self.station_id, queue=current.track_id)
+            self.batch_id = station_tracks.batch_id
+            self.tracks = self.client.tracks([t.track.track_id for t in station_tracks.sequence])
+            next_function = self.__send_start_radio
 
-    current = client.tracks([track_ids[index]])[0]
+        current = self.tracks[self.index]
+        self.play_id = self.__generate_play_id()
 
-    # start
-    play_id = do_play_start(client, current, station_id, batch_id)
+        play_end_kwargs["next_function"] = next_function
+        play_end_kwargs["next_args"] = {
+            "track": current,
+            "play_id": self.play_id,
+            "batch_id": self.batch_id,
+        }
 
-    return index, play_id, batch_id, track_ids
+        threading.Thread(target=self.__do_play_end, kwargs=play_end_kwargs).start()
+        return current
 
+    @staticmethod
+    def __generate_play_id():
+        return "%s-%s-%s" % (int(random() * 1000), int(random() * 1000), int(random() * 1000))
 
-def get_radio(client, station_id, queue=None):
-    station_tracks = client.rotor_station_tracks(station_id, queue=queue)
-    batch_id = station_tracks.batch_id
-    return station_tracks, batch_id
+    def __send_start_radio(self, track, play_id, batch_id):
+        self.__do_play_start(track, play_id, batch_id)
+        while True:
+            try:
+                self.client.rotor_station_feedback_radio_started(
+                    station=self.station_id,
+                    from_=self.station_from,
+                    batch_id=batch_id
+                )
+                break
+            except BaseException as ex:
+                continue
 
+    def __do_play_start(self, track, play_id, batch_id):
+        total_seconds = track.duration_ms / 1000
 
-def do_play_start(client, track, station_id, batch_id):
-    play_id = "%s-%s-%s" % (int(random() * 1000), int(random() * 1000), int(random() * 1000))
-    total_seconds = track.duration_ms / 1000
+        while True:
+            try:
+                self.client.play_audio(
+                    from_="desktop_win-home-playlist_of_the_day-playlist-default",
+                    track_id=track.id,
+                    album_id=track.albums[0].id,
+                    play_id=play_id,
+                    track_length_seconds=0,
+                    total_played_seconds=0,
+                    end_position_seconds=total_seconds
+                )
+                break
+            except BaseException as ex:
+                continue
 
-    import threading
-    t = threading.Thread(target=client.play_audio, kwargs={
-        "from_": "desktop_win-home-playlist_of_the_day-playlist-default",
-        "track_id": track.id,
-        "album_id": track.albums[0].id,
-        "play_id": play_id,
-        "track_length_seconds": 0,
-        "total_played_seconds": 0,
-        "end_position_seconds": total_seconds
-    })
-    t.start()
+        while True:
+            try:
+                self.client.play_audio(
+                    station=self.station_id,
+                    track_id=track.id,
+                    batch_id=batch_id
+                )
+                break
+            except BaseException as ex:
+                continue
 
-    t = threading.Thread(target=client.rotor_station_feedback_track_started, kwargs={
-        "station": station_id,
-        "track_id": track.id,
-        "batch_id": batch_id
-    })
-    t.start()
+    def __do_play_end(self, track, play_id, batch_id, next_function, next_args):
+        # played_seconds = 5.0
+        played_seconds = track.duration_ms / 1000
+        total_seconds = track.duration_ms / 1000
+        try_counter = 0
+        while True:
+            try:
+                self.client.play_audio(
+                    from_="desktop_win-home-playlist_of_the_day-playlist-default",
+                    track_id=track.id,
+                    album_id=track.albums[0].id,
+                    play_id=play_id,
+                    track_length_seconds=int(total_seconds),
+                    total_played_seconds=played_seconds,
+                    end_position_seconds=total_seconds
+                )
+                break
+            except BaseException as ex:
+                continue
 
-    return play_id
+        while True:
+            try:
+                self.client.rotor_station_feedback_track_finished(
+                    station=self.station_id,
+                    track_id=track.id,
+                    total_played_seconds=played_seconds,
+                    batch_id=batch_id
 
+                )
+                break
+            except BaseException as ex:
+                continue
 
-def do_play_end(client, track, play_id, station_id, batch_id):
-    # played_seconds = 5.0
-    played_seconds = track.duration_ms / 1000
-    total_seconds = track.duration_ms / 1000
+        # client.rotor_station_feedback_skip(
+        # 	station=station_id,
+        # 	track_id=track.track_id,
+        # 	total_played_seconds=played_seconds,
+        # 	batch_id=batch_id
+        # )
 
-    import threading
-    t = threading.Thread(target=client.play_audio, kwargs={
-        "from_": "desktop_win-home-playlist_of_the_day-playlist-default",
-        "track_id": track.id,
-        "album_id": track.albums[0].id,
-        "play_id": play_id,
-        "track_length_seconds": int(total_seconds),
-        "total_played_seconds": played_seconds,
-        "end_position_seconds": total_seconds,
-    })
-    t.start()
-
-    t = threading.Thread(target=client.rotor_station_feedback_track_finished, kwargs={
-        "station": station_id,
-        "track_id": track.id,
-        "total_played_seconds": played_seconds,
-        "batch_id": batch_id
-    })
-    t.start()
-
-    # client.rotor_station_feedback_skip(
-    # 	station=station_id,
-    # 	track_id=track.track_id,
-    # 	total_played_seconds=played_seconds,
-    # 	batch_id=batch_id
-    # )
-    pass
+        next_function(**next_args)
 
 
 def make_structure(client):

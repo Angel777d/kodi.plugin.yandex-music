@@ -220,7 +220,8 @@ def get_radio_group_name(key):
         'epoch': "By Epoch",
         'author': "By Author",
         'local': "By Place",
-    }[key]
+        'personal': "Personal",
+    }.get(key, key)
 
 
 def build_item_radio_type(key):

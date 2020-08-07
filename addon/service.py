@@ -6,6 +6,7 @@ import xbmcaddon
 from xbmc import sleep
 
 import radio
+from radio import Radio
 from utils import create_track_list_item, get_track_url
 from yandex_service import checkLogin
 
@@ -17,20 +18,19 @@ def log(msg, level=xbmc.LOGNOTICE):
 
 class MyPlayer(xbmc.Player):
 	def __init__(self, playerCore=0):
-		self.station_id = None
-		self.station_from = None
-		self.result = None
+		self.radio = None
+
 		self.urls = []
 		self.valid = True
 		self.started = False
 		xbmc.Player.__init__(self, playerCore=playerCore)
 
 	def start(self, station_id, station_from):
-		self.station_id = station_id
-		self.station_from = station_from
-		self.result = radio.start_radio(client, self.station_id, self.station_from)
+		log("Yandex.Radio --> start !!! ")
+		self.radio = Radio(client, station_id, station_from)
+		track = self.radio.start_radio()
 		# add first track
-		self.add_next_track(self.result)
+		self.add_next_track(track)
 		# add next track
 		self.queue_next()
 		# start playing
@@ -38,14 +38,13 @@ class MyPlayer(xbmc.Player):
 		self.started = True
 
 	def queue_next(self):
-		self.result = radio.play_next(client, self.station_id, self.station_from, *self.result)
-		self.add_next_track(self.result)
+		track = self.radio.play_next()
+		self.add_next_track(track)
 
-	def add_next_track(self, play_info):
+	def add_next_track(self, track):
 		# log("Add track to playlist")
 		# log("index: %s, batch_id: %s, track_ids: %s" % (index, batch_id, track_ids))
-		index, play_id, batch_id, track_ids = play_info
-		track = client.tracks([track_ids[index]])[0]
+		log("Yandex.Radio --> add_next_track !!! ")
 		url = get_track_url(track)
 		li = create_track_list_item(track)
 		li.setPath(url)
@@ -54,11 +53,11 @@ class MyPlayer(xbmc.Player):
 		self.urls.append(url)
 
 	def onPlayBackStopped(self):
-		log(" --> onPlayBackStopped !!! ")
+		log("Yandex.Radio --> onPlayBackStopped !!! ")
 		self.queue_next()
 
 	def onQueueNextItem(self):
-		log(" --> onQueueNextItem !!! ")
+		log("Yandex.Radio --> onQueueNextItem !!! ")
 		self.queue_next()
 
 	def check(self):

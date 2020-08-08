@@ -20,8 +20,35 @@ class StationNode:
         return "[StationNode] name: %s, children: %s" % (self.source.station.name, len(self.children))
 
 
+class TaskQueue:
+    def __init__(self, log):
+        self.log = log
+        self.__queue = []
+        self.__in_progress = False
+
+    def addTask(self, function, kwargs):
+        self.log("radio.TaskQueue::addTask")
+        self.__queue.append((function, kwargs))
+        self.__do_next()
+
+    def __do_next(self):
+        if self.__in_progress:
+            return
+        self.log("radio.TaskQueue::__do_next. tasks count: %s" % (len(self.__queue),))
+        if not self.__queue:
+            return
+        self.__in_progress = True
+        args = self.__queue.pop(0)
+        threading.Thread(target=self.__process, args=args).start()
+
+    def __process(self, function, kwargs):
+        function(**kwargs)
+        self.__in_progress = False
+        self.__do_next()
+
+
 class Radio:
-    def __init__(self, client, station_id, station_from):
+    def __init__(self, client, station_id, station_from, log):
         self.client = client
         self.station_id = station_id
         self.station_from = station_from
@@ -30,7 +57,18 @@ class Radio:
         self.tracks = None
         self.index = 0
 
-    def start_radio(self):
+        self.log = log
+
+        self.queue = TaskQueue(log)
+
+    def start_radio(self, callback):
+        self.queue.addTask(self.__start_radio, {"callback": callback})
+
+    def play_next(self, callback):
+        self.queue.addTask(self.__play_next, {"callback": callback})
+
+    def __start_radio(self, callback):
+        self.log("radio.Radio::__start_radio")
         station_tracks = self.client.rotor_station_tracks(self.station_id, queue=None)
         self.tracks = self.client.tracks([t.track.track_id for t in station_tracks.sequence])
         self.batch_id = station_tracks.batch_id
@@ -38,15 +76,16 @@ class Radio:
         current = self.tracks[0]
         self.play_id = self.__generate_play_id()
 
-        threading.Thread(target=self.__send_start_radio, kwargs={
+        kwargs = {
             "track": current,
             "play_id": self.play_id,
             "batch_id": self.batch_id,
-        }).start()
+        }
+        callback(current)
+        self.queue.addTask(self.__send_start_radio, kwargs)
 
-        return current
-
-    def play_next(self):
+    def __play_next(self, callback):
+        self.log("radio.Radio::__play_next")
         current = self.tracks[self.index]
 
         # finish
@@ -58,7 +97,7 @@ class Radio:
 
         # get next
         self.index += 1
-        next_function = self.__do_play_start
+        next_function = self.__send_play_start
         if self.index >= len(self.tracks):
             self.index = 0
             station_tracks = self.client.rotor_station_tracks(self.station_id, queue=current.track_id)
@@ -76,15 +115,17 @@ class Radio:
             "batch_id": self.batch_id,
         }
 
-        threading.Thread(target=self.__do_play_end, kwargs=play_end_kwargs).start()
-        return current
+        callback(current)
+        self.queue.addTask(self.__send_play_end, play_end_kwargs)
 
     @staticmethod
     def __generate_play_id():
         return "%s-%s-%s" % (int(random() * 1000), int(random() * 1000), int(random() * 1000))
 
     def __send_start_radio(self, track, play_id, batch_id):
-        self.__do_play_start(track, play_id, batch_id)
+        self.log("radio.Radio::__send_start_radio")
+        self.__send_play_start(track, play_id, batch_id)
+        fails_count = 0
         while True:
             try:
                 self.client.rotor_station_feedback_radio_started(
@@ -94,11 +135,16 @@ class Radio:
                 )
                 break
             except BaseException as ex:
+                fails_count += 1
+                self.log("[---] client.rotor_station_feedback_radio_started failed: %s" % (ex,))
+                if fails_count > 3:
+                    break
                 continue
 
-    def __do_play_start(self, track, play_id, batch_id):
+    def __send_play_start(self, track, play_id, batch_id):
+        self.log("radio.Radio::__send_play_start")
         total_seconds = track.duration_ms / 1000
-
+        fails_count = 0
         while True:
             try:
                 self.client.play_audio(
@@ -112,24 +158,33 @@ class Radio:
                 )
                 break
             except BaseException as ex:
+                fails_count += 1
+                self.log("[---] client.play_audio failed: %s" % (ex,))
+                if fails_count > 3:
+                    break
                 continue
 
         while True:
             try:
-                self.client.play_audio(
+                self.client.rotor_station_feedback_track_started(
                     station=self.station_id,
                     track_id=track.id,
                     batch_id=batch_id
                 )
                 break
             except BaseException as ex:
+                fails_count += 1
+                self.log("[---] client.rotor_station_feedback_track_started failed: %s" % (ex,))
+                if fails_count > 3:
+                    break
                 continue
 
-    def __do_play_end(self, track, play_id, batch_id, next_function, next_args):
+    def __send_play_end(self, track, play_id, batch_id, next_function, next_args):
+        self.log("radio.Radio::__send_play_end")
         # played_seconds = 5.0
         played_seconds = track.duration_ms / 1000
         total_seconds = track.duration_ms / 1000
-        try_counter = 0
+        fails_count = 0
         while True:
             try:
                 self.client.play_audio(
@@ -143,6 +198,10 @@ class Radio:
                 )
                 break
             except BaseException as ex:
+                fails_count += 1
+                self.log("[---] client.play_audio failed: %s" % (ex,))
+                if fails_count > 3:
+                    break
                 continue
 
         while True:
@@ -156,6 +215,10 @@ class Radio:
                 )
                 break
             except BaseException as ex:
+                fails_count += 1
+                self.log("[---] client.rotor_station_feedback_track_finished failed: %s" % (ex,))
+                if fails_count > 3:
+                    break
                 continue
 
         # client.rotor_station_feedback_skip(

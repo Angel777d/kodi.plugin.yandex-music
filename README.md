@@ -10,27 +10,32 @@
 based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
 
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.32.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.33.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api
 
 #### Changelog
+##### Version 0.0.33
+More radio fixes
+More logs
+
+
 ##### Version 0.0.32
-1. One more try to fix radio and streams
+One more try to fix radio and streams
 
 ##### Version 0.0.31
-1. Try to fix stream
+Try to fix stream
 
 ##### Version 0.0.30
-1. Radio fixed
+Radio fixed
 
 ##### Version 0.0.29
-1. Stream from track, album, artist
+Stream from track, album, artist
 
 ##### Version 0.0.28
-1. Smart playlists update fixed
+Smart playlists update fixed
 
 ##### Version 0.0.27
-1. Get cover image crash fixed 
+Get cover image crash fixed 
 
 ##### Version 0.0.26
 1. codec option added

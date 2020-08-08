@@ -26,25 +26,29 @@ class MyPlayer(xbmc.Player):
 		xbmc.Player.__init__(self, playerCore=playerCore)
 
 	def start(self, station_id, station_from):
-		log("Yandex.Radio --> start !!! ")
-		self.radio = Radio(client, station_id, station_from)
-		track = self.radio.start_radio()
-		# add first track
+		log("Yandex.Radio::start")
+		self.radio = Radio(client, station_id, station_from, log)
+		self.radio.start_radio(self.__on_start)
+
+	def __on_start(self, track):
+		log("Yandex.Radio::__on_start")
 		self.add_next_track(track)
-		# add next track
-		self.queue_next()
-		# start playing
+		self.radio.play_next(self.__on_play_next)
 		self.play(pl, startpos=0)
 		self.started = True
 
-	def queue_next(self):
-		track = self.radio.play_next()
+	def __on_play_next(self, track):
+		log("Yandex.Radio::__on_play_next")
 		self.add_next_track(track)
+
+	def queue_next(self):
+		log("Yandex.Radio::queue_next")
+		self.radio.play_next(self.__on_play_next)
 
 	def add_next_track(self, track):
 		# log("Add track to playlist")
 		# log("index: %s, batch_id: %s, track_ids: %s" % (index, batch_id, track_ids))
-		log("Yandex.Radio --> add_next_track !!! ")
+		log("Yandex.Radio::add_next_track")
 		url = get_track_url(track)
 		li = create_track_list_item(track)
 		li.setPath(url)
@@ -53,11 +57,11 @@ class MyPlayer(xbmc.Player):
 		self.urls.append(url)
 
 	def onPlayBackStopped(self):
-		log("Yandex.Radio --> onPlayBackStopped !!! ")
+		log("Yandex.Radio::onPlayBackStopped")
 		self.queue_next()
 
 	def onQueueNextItem(self):
-		log("Yandex.Radio --> onQueueNextItem !!! ")
+		log("Yandex.Radio::onQueueNextItem")
 		self.queue_next()
 
 	def check(self):

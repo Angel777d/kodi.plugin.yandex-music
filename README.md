@@ -10,20 +10,12 @@
 based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
 
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.33.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.34.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api
 
 #### Changelog
-##### Version 0.0.33
-More radio fixes
-More logs
-
-
-##### Version 0.0.32
-One more try to fix radio and streams
-
-##### Version 0.0.31
-Try to fix stream
+##### Version 0.0.34
+Stream by track fixes
 
 ##### Version 0.0.30
 Radio fixed

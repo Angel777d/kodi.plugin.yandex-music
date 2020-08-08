@@ -1,5 +1,6 @@
 # coding=utf-8
 import sys
+import threading
 import urllib
 import urlparse
 from threading import Thread
@@ -401,7 +402,7 @@ def download_all(client, track_ids):
 
 def main():
     # Stop Radio script on any change
-    xbmc.executebuiltin("StopScript(%s)" % SERVICE_SCRIPT)
+    # xbmc.executebuiltin("StopScript(%s)" % SERVICE_SCRIPT)
 
     checkSettings()
     authorized, client = checkLogin(settings)
@@ -467,12 +468,14 @@ def main():
     elif mode[0] == 'make_radio':
         make_radio_type = args["type"][0]
         make_radio_value = args["value"][0]
-        xbmc.executebuiltin("RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', make_radio_type, make_radio_value))
+        url = "RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', make_radio_type, make_radio_value)
+        threading.Thread(target=xbmc.executebuiltin, args=(url,)).run()
 
     elif mode[0] == 'radio_station':
         radio_type = args["radio_type"][0]
         station_key = args["station_key"][0]
-        xbmc.executebuiltin("RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'radio', radio_type, station_key))
+        url = "RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'radio', radio_type, station_key)
+        threading.Thread(target=xbmc.executebuiltin, args=(url,)).run()
 
 
 # misc

@@ -3,7 +3,6 @@ import sys
 
 import xbmc
 import xbmcaddon
-from xbmc import sleep
 
 import radio
 from radio import Radio
@@ -27,13 +26,13 @@ class MyPlayer(xbmc.Player):
 
 	def start(self, station_id, station_from):
 		log("Yandex.Radio::start")
-		self.radio = Radio(client, station_id, station_from, log)
+		self.radio = Radio(client, station_id, station_from)
 		self.radio.start_radio(self.__on_start)
 
-	def __on_start(self, track):
+	def __on_start(self, track, next_track):
 		log("Yandex.Radio::__on_start")
 		self.add_next_track(track)
-		self.radio.play_next(self.__on_play_next)
+		self.add_next_track(next_track)
 		self.play(pl, startpos=0)
 		self.started = True
 
@@ -46,14 +45,13 @@ class MyPlayer(xbmc.Player):
 		self.radio.play_next(self.__on_play_next)
 
 	def add_next_track(self, track):
-		# log("Add track to playlist")
-		# log("index: %s, batch_id: %s, track_ids: %s" % (index, batch_id, track_ids))
 		log("Yandex.Radio::add_next_track")
-		url = get_track_url(track)
+		track, url = track
 		li = create_track_list_item(track)
 		li.setPath(url)
 		playIndex = pl.size()
 		pl.add(url, li, playIndex)
+
 		self.urls.append(url)
 
 	def onPlayBackStopped(self):
@@ -138,13 +136,12 @@ if __name__ == '__main__':
 		station = stations[radio_type_][station_key_]
 		player.start(station.getId(), station.source.station.id_for_from)
 
-	sleep(5)
 	while not monitor.abortRequested():
 		player.check()
 		if not player.valid:
 			break
 		# Sleep/wait for abort for 10 seconds
-		if monitor.waitForAbort(3):
+		if monitor.waitForAbort(10):
 			# Abort was requested while waiting. We should exit
 			break
 

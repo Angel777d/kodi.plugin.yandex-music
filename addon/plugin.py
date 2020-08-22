@@ -142,7 +142,7 @@ def build_item_playlist(playlist, titleFormat="%s"):
 	else:
 		img_url = get_cover_img(playlist.cover)
 
-	li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage=img_url, iconImage=img_url)
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'playlist', 'playlist_id': playlist.playlist_id, 'title': playlist.title})
 	log("build playlist item. tracks: %s" % len(playlist.tracks))
@@ -152,7 +152,7 @@ def build_item_playlist(playlist, titleFormat="%s"):
 
 def build_item_artist(artist, titleFormat="%s"):
 	img_url = get_cover_img(artist.cover)
-	li = xbmcgui.ListItem(label=titleFormat % artist.name, thumbnailImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % artist.name, thumbnailImage=img_url, iconImage=img_url)
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'artist', 'artist_id': artist.id, 'title': artist.name})
 	build_menu_download_artist(li, artist.id)
@@ -167,7 +167,7 @@ def build_item_album(album, titleFormat="%s"):
 	else:
 		img_url = ""
 
-	li = xbmcgui.ListItem(label=titleFormat % album.title, thumbnailImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % album.title, thumbnailImage=img_url, iconImage=img_url)
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'album', 'album_id': album.id, 'title': album.title})
 	build_menu_download_album(li, album.id)
@@ -199,11 +199,18 @@ def build_main(authorized, client):
 		url = build_url({'mode': 'chart', 'title': "Chart"})
 		entry_list.append((url, li, True))
 
+		# Show Mixes
+		li = xbmcgui.ListItem(label="Mixes", thumbnailImage="")
+		# li.setProperty('fanart_image', "")
+		url = build_url({'mode': 'mixes', 'title': "Mixes"})
+		entry_list.append((url, li, True))
+
 		# show Landing playlists
 		landing = client.landing(["personal-playlists"])
 		block = [b for b in landing.blocks if b.type == "personal-playlists"][0]
 		playlists = [entity.data.data for entity in block.entities]
 		entry_list += [build_item_playlist(playlist) for playlist in playlists]
+
 	else:
 		li = xbmcgui.ListItem(label="Login", thumbnailImage="")
 		# li.setProperty('fanart_image', "")
@@ -212,6 +219,39 @@ def build_main(authorized, client):
 
 	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
 	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
+
+
+def build_mixes(client):
+	landing = client.landing(["mixes"])
+	mixes = landing.blocks[0]
+
+	elements = []
+	for mix in mixes.entities:
+		tag = mix.data.url.split("/")[2].split("?")[0].encode("utf-8")
+		img_url = "https://" + mix.data.background_image_uri.replace("%%", "400x400")
+		log("img_url: " + img_url)
+		url = build_url({'mode': 'mix', 'title': mix.data.title, "tag": tag})
+		li = xbmcgui.ListItem(label=mix.data.title, thumbnailImage=img_url, iconImage=img_url)
+		li.setProperty('fanart_image', img_url)
+		elements.append((url, li, True))
+
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
+
+
+def build_mix(client, tag):
+	tag = tag.decode("utf-8")
+	log("tag: " + tag)
+	tag_obj = client.tags(tag)
+
+	elements = []
+	playlist_ids = ["%s:%s" % (plid.uid, plid.kind) for plid in tag_obj.ids]
+	if playlist_ids:
+		playlists = client.playlists_list(playlist_ids)
+		elements += [build_item_playlist(playlist) for playlist in playlists]
+
+	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
+	xbmcplugin.endOfDirectory(addon_handle)
 
 
 def build_chart(client):
@@ -267,7 +307,8 @@ def build_item_radio_type(key):
 
 def build_item_radio_station(radio_type, key, s_info):
 	title = s_info.getTitle()
-	li = xbmcgui.ListItem(label=title, thumbnailImage=s_info.getImage())
+	img_url = s_info.getImage()
+	li = xbmcgui.ListItem(label=title, thumbnailImage=img_url, iconImage=img_url)
 	li.setProperty('fanart_image', s_info.getImage("460x460"))
 	url = build_url({'mode': 'radio_station', 'title': title, "radio_type": radio_type, "station_key": key})
 	return url, li, True
@@ -457,6 +498,11 @@ def main():
 		build_main(authorized, client)
 	elif mode[0] == 'user_playlists':
 		build_user_playlists(client)
+	elif mode[0] == 'mixes':
+		build_mixes(client)
+	elif mode[0] == 'mix':
+		tag = args['tag'][0]
+		build_mix(client, tag)
 	elif mode[0] == 'chart':
 		build_chart(client)
 	elif mode[0] == 'search':

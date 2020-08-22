@@ -16,7 +16,7 @@ def create_track_list_item(track, titleFormat="%s"):
     else:
         img_url = ""
 
-    li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url)
+    li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url, iconImage=img_url)
     li.setProperty('fanart_image', img_url)
     li.setProperty('IsPlayable', 'true')
     info = {

@@ -17,10 +17,30 @@ Plugin doesn't store password. Yandex will generate token. It can be found in pl
 ##### refs:
 based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.35.zip
-[ym_lib]: https://github.com/MarshalX/yandex-music-api
+
+### [Неофициальный] плагин Яндекс Музыки для Kodi
+#### Установка
+1. Скачайте [zip файл плагина][plugin_zip] из репозитория
+2. В Kodi откройте Settings->System->Add-ons
+3. Разрешите установку из неизвестных источников (Unknown Sources)
+4. Откройте Settings->Add-ons->Install from ZIP file
+5. Выберете скачаный [zip файл][plugin_zip]
+6. Готово! Вы великолепны!
+
+#### Setup:
+Все возможности плагина станут доступны после логина в аккаунт Яндекса.
+
+Запустите плагин и передите в поле Login.
+Введите ваш логин и пароль.
+Плагин не хранит пароль. Яндекс сгенерит токен. Токен можно найти в настройках плагина.
+
 
 #### Changelog
+##### Version 0.0.36
+User playlist and user likes moved to own folder
+Chart added
+Russian description added to README.md
+
 ##### Version 0.0.35
 Radio and stream code refactoring and cleanup
 
@@ -43,3 +63,6 @@ Get cover image crash fixed
 1. codec option added
 2. high res option added
 3. auto download option added
+
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.36.zip
+[ym_lib]: https://github.com/MarshalX/yandex-music-api

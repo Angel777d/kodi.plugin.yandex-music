@@ -36,6 +36,9 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 
 
 #### Changelog
+##### Version 0.0.38
+New yandex music account crash fixed 
+
 ##### Version 0.0.37
 Mixes added 
 
@@ -67,5 +70,5 @@ Get cover image crash fixed
 2. high res option added
 3. auto download option added
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.37.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.38.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api

@@ -209,7 +209,7 @@ def build_main(authorized, client):
 		landing = client.landing(["personal-playlists"])
 		block = [b for b in landing.blocks if b.type == "personal-playlists"][0]
 		playlists = [entity.data.data for entity in block.entities]
-		entry_list += [build_item_playlist(playlist) for playlist in playlists]
+		entry_list += [build_item_playlist(playlist) for playlist in playlists if playlist.is_valid]
 
 	else:
 		li = xbmcgui.ListItem(label="Login", thumbnailImage="")

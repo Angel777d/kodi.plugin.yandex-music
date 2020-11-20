@@ -1,0 +1,3 @@
+[submodule "addon/lib/yandex-music-api"]
+	path = addon/lib/yandex-music-api
+	url = https://github.com/MarshalX/yandex-music-api.git

@@ -36,6 +36,10 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 
 
 #### Changelog
+
+##### Version 0.1.0
+Python 3 for Kodi 19
+
 ##### Version 0.0.38
 New yandex music account crash fixed 
 
@@ -70,5 +74,5 @@ Get cover image crash fixed
 2. high res option added
 3. auto download option added
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.38.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.0.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api

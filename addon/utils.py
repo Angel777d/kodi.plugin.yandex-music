@@ -16,7 +16,8 @@ def create_track_list_item(track, titleFormat="%s"):
     else:
         img_url = ""
 
-    li = xbmcgui.ListItem(label=titleFormat % track.title, thumbnailImage=img_url, iconImage=img_url)
+    li = xbmcgui.ListItem(label=titleFormat % track.title)
+    li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
     li.setProperty('fanart_image', img_url)
     li.setProperty('IsPlayable', 'true')
     info = {
@@ -127,16 +128,19 @@ def get_track_url(track, codec="mp3", high_res=False):
     return get_track_download_info(track, codec, high_res).get_direct_link()
 
 
-def notify(title, msg, duration=1):
+def notify(title, msg:str, duration=1):
     xbmc.executebuiltin("Notification(%s,%s,%s)" % (legalize(title), legalize(msg), duration))
 
 
-def log(msg, level=xbmc.LOGNOTICE):
+def log(msg: str, level=xbmc.LOGWARNING):
     plugin = "---"
     xbmc.log("[%s] %s" % (plugin, legalize(msg)), level)
 
 
 def legalize(value):
-    if isinstance(value, unicode):
-        value = value.encode('utf-8')
-    return value.__str__()
+    return value
+
+# def legalize(value):
+#     if isinstance(value, unicode):
+#         value = value.encode('utf-8')
+#     return value.__str__()

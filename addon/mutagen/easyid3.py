@@ -12,9 +12,10 @@ EasyID3 is a wrapper around mutagen.id3.ID3 to make ID3 tags appear
 more like Vorbis or APEv2 tags.
 """
 
+from typing import Callable, Dict
+
 import mutagen.id3
 
-from ._compat import iteritems, text_type, PY2
 from mutagen import Metadata
 from mutagen._util import DictMixin, dict_match, loadfile
 from mutagen.id3 import ID3, error, delete, ID3FileType
@@ -65,10 +66,10 @@ class EasyID3(DictMixin, Metadata):
 
     """
 
-    Set = {}
-    Get = {}
-    Delete = {}
-    List = {}
+    Set: Dict[str, Callable] = {}
+    Get: Dict[str, Callable] = {}
+    Delete: Dict[str, Callable] = {}
+    List: Dict[str, Callable] = {}
 
     # For compatibility.
     valid_keys = Get
@@ -216,12 +217,8 @@ class EasyID3(DictMixin, Metadata):
             raise EasyID3KeyError("%r is not a valid key" % key)
 
     def __setitem__(self, key, value):
-        if PY2:
-            if isinstance(value, basestring):
-                value = [value]
-        else:
-            if isinstance(value, text_type):
-                value = [value]
+        if isinstance(value, str):
+            value = [value]
         func = dict_match(self.Set, key.lower(), self.SetFallback)
         if func is not None:
             return func(self.__id3, key, value)
@@ -471,7 +468,7 @@ def peakgain_list(id3, key):
         keys.append("replaygain_%s_peak" % frame.desc)
     return keys
 
-for frameid, key in iteritems({
+for frameid, key in {
     "TALB": "album",
     "TBPM": "bpm",
     "TCMP": "compilation",  # iTunes extension
@@ -500,7 +497,7 @@ for frameid, key in iteritems({
     "TSRC": "isrc",
     "TSST": "discsubtitle",
     "TLAN": "language",
-}):
+}.items():
     EasyID3.RegisterTextKey(key, frameid)
 
 EasyID3.RegisterKey("genre", genre_get, genre_set, genre_delete)
@@ -521,7 +518,7 @@ EasyID3.RegisterKey("replaygain_*_peak", peak_get, peak_set, peak_delete)
 # http://musicbrainz.org/docs/specs/metadata_tags.html
 # http://bugs.musicbrainz.org/ticket/1383
 # http://musicbrainz.org/doc/MusicBrainzTag
-for desc, key in iteritems({
+for desc, key in {
     u"MusicBrainz Artist Id": "musicbrainz_artistid",
     u"MusicBrainz Album Id": "musicbrainz_albumid",
     u"MusicBrainz Album Artist Id": "musicbrainz_albumartistid",
@@ -542,7 +539,7 @@ for desc, key in iteritems({
     u"MusicBrainz Work Id": "musicbrainz_workid",
     u"Acoustid Fingerprint": "acoustid_fingerprint",
     u"Acoustid Id": "acoustid_id",
-}):
+}.items():
     EasyID3.RegisterTXXXKey(key, desc)
 
 
@@ -558,4 +555,4 @@ class EasyID3FileType(ID3FileType):
         tags (`EasyID3`)
     """
 
-    ID3 = EasyID3
+    ID3 = EasyID3  # type: ignore

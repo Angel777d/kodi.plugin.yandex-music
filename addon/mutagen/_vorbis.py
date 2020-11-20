@@ -17,10 +17,10 @@ The specification is at http://www.xiph.org/vorbis/doc/v-comment.html.
 """
 
 import sys
+from io import BytesIO
 
 import mutagen
-from ._compat import reraise, BytesIO, text_type, xrange, PY3, PY2
-from mutagen._util import DictMixin, cdata, MutagenError
+from mutagen._util import DictMixin, cdata, MutagenError, reraise
 
 
 def is_valid_key(key):
@@ -32,7 +32,7 @@ def is_valid_key(key):
     Takes str/unicode in Python 2, unicode in Python 3
     """
 
-    if PY3 and isinstance(key, bytes):
+    if isinstance(key, bytes):
         raise TypeError("needs to be str not bytes")
 
     for c in key:
@@ -104,7 +104,7 @@ class VComment(mutagen.Tags, list):
             vendor_length = cdata.uint_le(fileobj.read(4))
             self.vendor = fileobj.read(vendor_length).decode('utf-8', errors)
             count = cdata.uint_le(fileobj.read(4))
-            for i in xrange(count):
+            for i in range(count):
                 length = cdata.uint_le(fileobj.read(4))
                 try:
                     string = fileobj.read(length).decode('utf-8', errors)
@@ -124,9 +124,7 @@ class VComment(mutagen.Tags, list):
                 except UnicodeEncodeError:
                     raise VorbisEncodingError("invalid tag name %r" % tag)
                 else:
-                    # string keys in py3k
-                    if PY3:
-                        tag = tag.decode("ascii")
+                    tag = tag.decode("ascii")
                     if is_valid_key(tag):
                         self.append((tag, value))
 
@@ -145,14 +143,8 @@ class VComment(mutagen.Tags, list):
         In Python 3 all keys and values have to be a string.
         """
 
-        if not isinstance(self.vendor, text_type):
-            if PY3:
-                raise ValueError("vendor needs to be str")
-
-            try:
-                self.vendor.decode('utf-8')
-            except UnicodeDecodeError:
-                raise ValueError
+        if not isinstance(self.vendor, str):
+            raise ValueError("vendor needs to be str")
 
         for key, value in self:
             try:
@@ -161,16 +153,9 @@ class VComment(mutagen.Tags, list):
             except TypeError:
                 raise ValueError("%r is not a valid key" % key)
 
-            if not isinstance(value, text_type):
-                if PY3:
-                    err = "%r needs to be str for key %r" % (value, key)
-                    raise ValueError(err)
-
-                try:
-                    value.decode("utf-8")
-                except Exception:
-                    err = "%r is not a valid value for key %r" % (value, key)
-                    raise ValueError(err)
+            if not isinstance(value, str):
+                err = "%r needs to be str for key %r" % (value, key)
+                raise ValueError(err)
 
         return True
 
@@ -215,7 +200,7 @@ class VComment(mutagen.Tags, list):
     def pprint(self):
 
         def _decode(value):
-            if not isinstance(value, text_type):
+            if not isinstance(value, str):
                 return value.decode('utf-8', 'replace')
             return value
 
@@ -223,7 +208,7 @@ class VComment(mutagen.Tags, list):
         return u"\n".join(tags)
 
 
-class VCommentDict(VComment, DictMixin):
+class VCommentDict(VComment, DictMixin):  # type: ignore
     """A VComment that looks like a dictionary.
 
     This object differs from a dictionary in two ways. First,
@@ -244,7 +229,6 @@ class VCommentDict(VComment, DictMixin):
         work.
         """
 
-        # PY3 only
         if isinstance(key, slice):
             return VComment.__getitem__(self, key)
 
@@ -262,7 +246,6 @@ class VCommentDict(VComment, DictMixin):
     def __delitem__(self, key):
         """Delete all values associated with the key."""
 
-        # PY3 only
         if isinstance(key, slice):
             return VComment.__delitem__(self, key)
 
@@ -298,7 +281,6 @@ class VCommentDict(VComment, DictMixin):
         string.
         """
 
-        # PY3 only
         if isinstance(key, slice):
             return VComment.__setitem__(self, key, values)
 
@@ -311,9 +293,6 @@ class VCommentDict(VComment, DictMixin):
             del(self[key])
         except KeyError:
             pass
-
-        if PY2:
-            key = key.encode('ascii')
 
         for value in values:
             self.append((key, value))

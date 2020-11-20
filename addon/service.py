@@ -7,10 +7,10 @@ import xbmcaddon
 import radio
 from radio import Radio
 from utils import create_track_list_item, get_track_url
-from yandex_service import checkLogin
+from yandex_service import check_login
 
 
-def log(msg, level=xbmc.LOGNOTICE):
+def log(msg, level=xbmc.LOGWARNING):
 	plugin = "[Radio Service]"
 	xbmc.log("%s %s" % (plugin, msg), level)
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 	station_key_ = sys.argv[3]
 
 	# get stations info
-	auth, client = checkLogin(settings)
+	auth, client = check_login(settings)
 
 	# init playlist
 	pl = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)

@@ -2,7 +2,6 @@
 import sys
 import threading
 import urllib
-import urlparse
 from threading import Thread
 
 import xbmc
@@ -14,7 +13,7 @@ import radio
 from mutagen import mp3, easyid3
 from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url, get_track_download_info, \
 	log, notify
-from yandex_service import checkLogin, login
+from yandex_service import check_login, login
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
 SERVICE_SCRIPT = "special://home/addons/plugin.yandex-music/service.py"
@@ -23,7 +22,7 @@ SERVICE_SCRIPT = "special://home/addons/plugin.yandex-music/service.py"
 def build_url(query, base_url=None):
 	if not base_url:
 		base_url = sys.argv[0]
-	return base_url + '?' + urllib.urlencode(query, 'utf-8')
+	return base_url + '?' + urllib.parse.urlencode(query, 'utf-8')
 
 
 def build_url2(**query):
@@ -105,14 +104,14 @@ def build_menu_track(li, track):
 
 
 def build_item_stub(label):
-	li = xbmcgui.ListItem(label=label, thumbnailImage="")
+	li = xbmcgui.ListItem(label=label)
 	li.setProperty('IsPlayable', 'false')
 	url = build_url({'mode': 'stub'})
 	return url, li, False
 
 
 def build_item_simple(title, data, mode, isFolder=False):
-	li = xbmcgui.ListItem(label=title, thumbnailImage="")
+	li = xbmcgui.ListItem(label=title)
 	li.setProperty('fanart_image', "")
 	li.setProperty('IsPlayable', 'false')
 	li.setInfo("music", {'Title': title, 'Album': title})
@@ -142,7 +141,8 @@ def build_item_playlist(playlist, titleFormat="%s"):
 	else:
 		img_url = get_cover_img(playlist.cover)
 
-	li = xbmcgui.ListItem(label=titleFormat % playlist.title, thumbnailImage=img_url, iconImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % playlist.title)
+	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'playlist', 'playlist_id': playlist.playlist_id, 'title': playlist.title})
 	log("build playlist item. tracks: %s" % len(playlist.tracks))
@@ -152,7 +152,8 @@ def build_item_playlist(playlist, titleFormat="%s"):
 
 def build_item_artist(artist, titleFormat="%s"):
 	img_url = get_cover_img(artist.cover)
-	li = xbmcgui.ListItem(label=titleFormat % artist.name, thumbnailImage=img_url, iconImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % artist.name)
+	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'artist', 'artist_id': artist.id, 'title': artist.name})
 	build_menu_download_artist(li, artist.id)
@@ -167,7 +168,8 @@ def build_item_album(album, titleFormat="%s"):
 	else:
 		img_url = ""
 
-	li = xbmcgui.ListItem(label=titleFormat % album.title, thumbnailImage=img_url, iconImage=img_url)
+	li = xbmcgui.ListItem(label=titleFormat % album.title)
+	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'album', 'album_id': album.id, 'title': album.title})
 	build_menu_download_album(li, album.id)
@@ -175,32 +177,32 @@ def build_item_album(album, titleFormat="%s"):
 
 
 def build_main(authorized, client):
-	li = xbmcgui.ListItem(label="Search", thumbnailImage="")
+	li = xbmcgui.ListItem(label="Search")
 	# li.setProperty('fanart_image', "")
 	url = build_url({'mode': 'search', 'title': "Search"})
 	entry_list = [(url, li, True), ]
 
 	if authorized:
 		# Show User Playlists
-		li = xbmcgui.ListItem(label="User Playlists", thumbnailImage="")
+		li = xbmcgui.ListItem(label="User Playlists")
 		# li.setProperty('fanart_image', "")
 		url = build_url({'mode': 'user_playlists', 'title': "User Playlists"})
 		entry_list.append((url, li, True))
 
 		# Show Radio
-		li = xbmcgui.ListItem(label="Radio", thumbnailImage="")
+		li = xbmcgui.ListItem(label="Radio")
 		# li.setProperty('fanart_image', "")
 		url = build_url({'mode': 'radio', 'title': "Radio"})
 		entry_list.append((url, li, True))
 
 		# Show Chart
-		li = xbmcgui.ListItem(label="Chart", thumbnailImage="")
+		li = xbmcgui.ListItem(label="Chart")
 		# li.setProperty('fanart_image', "")
 		url = build_url({'mode': 'chart', 'title': "Chart"})
 		entry_list.append((url, li, True))
 
 		# Show Mixes
-		li = xbmcgui.ListItem(label="Mixes", thumbnailImage="")
+		li = xbmcgui.ListItem(label="Mixes")
 		# li.setProperty('fanart_image', "")
 		url = build_url({'mode': 'mixes', 'title': "Mixes"})
 		entry_list.append((url, li, True))
@@ -212,7 +214,7 @@ def build_main(authorized, client):
 		entry_list += [build_item_playlist(playlist) for playlist in playlists if playlist.is_valid]
 
 	else:
-		li = xbmcgui.ListItem(label="Login", thumbnailImage="")
+		li = xbmcgui.ListItem(label="Login")
 		# li.setProperty('fanart_image', "")
 		url = build_url({'mode': 'login', 'title': "Login"})
 		entry_list.append((url, li, True))
@@ -231,7 +233,8 @@ def build_mixes(client):
 		img_url = "https://" + mix.data.background_image_uri.replace("%%", "400x400")
 		log("img_url: " + img_url)
 		url = build_url({'mode': 'mix', 'title': mix.data.title, "tag": tag})
-		li = xbmcgui.ListItem(label=mix.data.title, thumbnailImage=img_url, iconImage=img_url)
+		li = xbmcgui.ListItem(label=mix.data.title)
+		li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 		li.setProperty('fanart_image', img_url)
 		elements.append((url, li, True))
 
@@ -272,7 +275,7 @@ def build_user_playlists(client):
 	elements = []
 
 	# Show user like item
-	li = xbmcgui.ListItem(label="User Likes", thumbnailImage="")
+	li = xbmcgui.ListItem(label="User Likes")
 	# li.setProperty('fanart_image', "")
 	url = build_url({'mode': 'like', 'title': "User Likes"})
 	elements.append((url, li, True))
@@ -300,7 +303,7 @@ def get_radio_group_name(key):
 
 def build_item_radio_type(key):
 	title = get_radio_group_name(key)
-	li = xbmcgui.ListItem(label=title, thumbnailImage="")
+	li = xbmcgui.ListItem(label=title)
 	url = build_url({'mode': 'radio_type', 'title': title, "radio_type": key})
 	return url, li, True
 
@@ -308,7 +311,8 @@ def build_item_radio_type(key):
 def build_item_radio_station(radio_type, key, s_info):
 	title = s_info.getTitle()
 	img_url = s_info.getImage()
-	li = xbmcgui.ListItem(label=title, thumbnailImage=img_url, iconImage=img_url)
+	li = xbmcgui.ListItem(label=title)
+	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', s_info.getImage("460x460"))
 	url = build_url({'mode': 'radio_station', 'title': title, "radio_type": radio_type, "station_key": key})
 	return url, li, True
@@ -479,10 +483,10 @@ def main():
 	# xbmc.executebuiltin("StopScript(%s)" % SERVICE_SCRIPT)
 
 	checkSettings()
-	authorized, client = checkLogin(settings)
+	authorized, client = check_login(settings)
 	# log("authorized: %s" % authorized)
 
-	args = urlparse.parse_qs(sys.argv[2][1:])
+	args = urllib.parse.parse_qs(sys.argv[2][1:])
 	mode = args.get('mode', None)
 
 	xbmcplugin.setContent(addon_handle, 'songs')
@@ -494,7 +498,7 @@ def main():
 	elif mode[0] == 'login':
 		if not authorized:
 			login(settings)
-		authorized, client = checkLogin(settings)
+		authorized, client = check_login(settings)
 		build_main(authorized, client)
 	elif mode[0] == 'user_playlists':
 		build_user_playlists(client)

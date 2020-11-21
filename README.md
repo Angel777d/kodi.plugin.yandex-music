@@ -7,6 +7,8 @@
 5. Select downloaded [plugin zip file][plugin_zip]
 6. That's all. You are awesome!   
 
+7. Kodi 19 plugin is [here][plugin_19_zip]
+
 #### Setup:
 All features will be available after login only.
 
@@ -27,6 +29,7 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
 
+7. Плагин для Kodi 19 [тут][plugin_19_zip]
 #### Настройка:
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.
 
@@ -38,7 +41,9 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 #### Changelog
 
 ##### Version 0.1.0
-Python 3 for Kodi 19
+Python 3 for Kodi 19 supported
+Track item info updated
+Clear logs 
 
 ##### Version 0.0.38
 New yandex music account crash fixed 
@@ -74,5 +79,6 @@ Get cover image crash fixed
 2. high res option added
 3. auto download option added
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.0.zip
+[plugin_19_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.0.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.38.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api

@@ -5,32 +5,52 @@ import xbmc
 import xbmcgui
 
 
-def create_track_list_item(track, titleFormat="%s"):
+def create_track_list_item(track, titleFormat="%s", show_artist=True):
+    album = track.albums and track.albums[0]
+    artist = track.artists and track.artists[0]
     if track.cover_uri:
         img_url = "https://%s" % (track.cover_uri.replace("%%", "460x460"))
-    elif track.albums and track.albums[0].cover_uri:
-        img_url = "https://%s" % (track.albums[0].cover_uri.replace("%%", "460x460"))
-    elif track.artists and track.artists[0].cover:
-        cover = track.artists[0].cover
+    elif album and album.cover_uri:
+        img_url = "https://%s" % (album.cover_uri.replace("%%", "460x460"))
+    elif artist and artist.cover:
+        cover = artist.cover
         img_url = "https://%s" % ((cover.uri or cover.items_uri[0]).replace("%%", "460x460"))
     else:
         img_url = ""
 
-    li = xbmcgui.ListItem(label=titleFormat % track.title)
-    li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
-    li.setProperty('fanart_image', img_url)
+    label = titleFormat % f"{artist.name} - {track.title}" if show_artist else track.title
+    label2 = f"{album.title} ({str(album.year)})" if album else ""
+
+    li = xbmcgui.ListItem(label=label, label2=label2, path="", offscreen=False)
     li.setProperty('IsPlayable', 'true')
+
+    li.setArt({
+        "thumb": img_url,
+        "icon": img_url,
+        "fanart": img_url,
+        "poster": img_url,
+        "banner": img_url,
+        "clearart": img_url,
+        "clearlogo": img_url,
+        "landscape": img_url,
+    })
+
     info = {
         "title": track.title,
-        "mediatype": "music",
+        "mediatype": "song",
         # "lyrics": "(On a dark desert highway...)"
+        # "rating": 10,  # 1-10
+        # "userrating": 10,  # 1-10
+        # "playcount": 0,
+        # "lastplayed": "",  # Y-m-d h:m:s = 2009-04-05 23:16:04
+        # "dbid": 0,  # Only add this for items of the local db. You also need to set the correct 'mediatype'!
+        # "comment": "This is a great song"
     }
     if track.duration_ms:
         info["duration"] = int(track.duration_ms / 1000)
-    if track.artists:
-        info["artist"] = track.artists[0].name
-    if track.albums:
-        album = track.albums[0]
+    if artist:
+        info["artist"] = artist.name
+    if album:
         info["album"] = album.title
         if album.track_position:
             info["tracknumber"] = str(album.track_position.index)

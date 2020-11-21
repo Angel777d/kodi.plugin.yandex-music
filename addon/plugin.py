@@ -42,7 +42,7 @@ def checkSettings():
 def build_menu_download_playlist(li, playlist_id):
 	li.addContextMenuItems([(
 		'Download tracks',
-		'XBMC.Container.Update(%s)' % build_url2(mode='download_playlist', playlist_id=playlist_id),
+		'Container.Update(%s)' % build_url2(mode='download_playlist', playlist_id=playlist_id),
 	)])
 
 
@@ -50,11 +50,11 @@ def build_menu_download_artist(li, artist_id):
 	li.addContextMenuItems([
 		(
 			'Stream From Artist',
-			'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='artist', value=artist_id),
+			"RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', 'artist', artist_id)
 		),
 		(
 			'Download all tracks',
-			'XBMC.Container.Update(%s)' % build_url2(mode='download_artist', artist_id=artist_id),
+			'Container.Update(%s)' % build_url2(mode='download_artist', artist_id=artist_id),
 		)
 	])
 
@@ -63,11 +63,11 @@ def build_menu_download_album(li, album_id):
 	li.addContextMenuItems([
 		(
 			'Stream From Album',
-			'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='album', value=album_id),
+			"RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', 'album', album_id)
 		),
 		(
 			'Download all tracks',
-			'XBMC.Container.Update(%s)' % build_url2(mode='download_album', album_id=album_id),
+			'Container.Update(%s)' % build_url2(mode='download_album', album_id=album_id),
 		)
 	])
 
@@ -75,7 +75,7 @@ def build_menu_download_album(li, album_id):
 def build_menu_download_user_likes(li):
 	li.addContextMenuItems([(
 		'Download all',
-		'XBMC.Container.Update(%s)' % build_url2(mode='download_user_likes'),
+		'Container.Update(%s)' % build_url2(mode='download_user_likes'),
 	)])
 
 
@@ -84,20 +84,20 @@ def build_menu_track(li, track):
 
 	commands.append((
 		'Stream From Track',
-		'XBMC.Container.Update(%s)' % build_url2(mode='make_radio', type='track', value=track.id),
+		"RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', 'track', track.id)
 	))
 
 	if track.albums:
 		album = track.albums[0]
 		commands.append((
 			'Go To Album',
-			'XBMC.Container.Update(%s)' % build_url2(mode='album', album_id=album.id, title=album.title),
+			'Container.Update(%s)' % build_url2(mode='album', album_id=album.id, title=album.title),
 		))
 	if track.artists:
 		artist = track.artists[0]
 		commands.append((
 			'Go To Artist',
-			'XBMC.Container.Update(%s)' % build_url2(mode='artist', artist_id=artist.id, title=artist.name),
+			'Container.Update(%s)' % build_url2(mode='artist', artist_id=artist.id, title=artist.name),
 		))
 	if commands:
 		li.addContextMenuItems(commands)
@@ -119,7 +119,7 @@ def build_item_simple(title, data, mode, isFolder=False):
 	return url, li, isFolder
 
 
-def build_item_track(track, titleFormat="%s", force_url=False):
+def build_item_track(track, titleFormat="%s", force_url=False, show_artist=True):
 	prefixPath = settings.getSetting('folder')
 	downloaded, path, folder = getTrackPath(prefixPath, track, codec)
 
@@ -129,7 +129,7 @@ def build_item_track(track, titleFormat="%s", force_url=False):
 		url = get_track_url(track, codec, high_res)
 	else:
 		url = build_url({'mode': 'track', 'track_id': track.track_id, 'title': track.title})
-	li = create_track_list_item(track, titleFormat)
+	li = create_track_list_item(track, titleFormat, show_artist)
 	build_menu_track(li, track)
 
 	return url, li, False
@@ -145,7 +145,6 @@ def build_item_playlist(playlist, titleFormat="%s"):
 	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', img_url)
 	url = build_url({'mode': 'playlist', 'playlist_id': playlist.playlist_id, 'title': playlist.title})
-	log("build playlist item. tracks: %s" % len(playlist.tracks))
 	build_menu_download_playlist(li, playlist.playlist_id)
 	return url, li, True
 
@@ -231,7 +230,6 @@ def build_mixes(client):
 	for mix in mixes.entities:
 		tag = mix.data.url.split("/")[2].split("?")[0].encode("utf-8")
 		img_url = "https://" + mix.data.background_image_uri.replace("%%", "400x400")
-		log("img_url: " + img_url)
 		url = build_url({'mode': 'mix', 'title': mix.data.title, "tag": tag})
 		li = xbmcgui.ListItem(label=mix.data.title)
 		li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
@@ -242,9 +240,7 @@ def build_mixes(client):
 	xbmcplugin.endOfDirectory(addon_handle)
 
 
-def build_mix(client, tag):
-	tag = tag.decode("utf-8")
-	log("tag: " + tag)
+def build_mix(client, tag: str):
 	tag_obj = client.tags(tag)
 
 	elements = []
@@ -341,7 +337,7 @@ def build_album(client, album_id):
 	album = client.albums_with_tracks(album_id)
 	tracks = [track for volume in album.volumes for track in volume]
 
-	elements = [build_item_track(t) for t in tracks]
+	elements = [build_item_track(t, show_artist=False) for t in tracks]
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -491,6 +487,8 @@ def main():
 
 	xbmcplugin.setContent(addon_handle, 'songs')
 
+	log("[Yandex music plugin] authorized: %s, mode: %s, args: %s" % (authorized, mode, args))
+
 	if mode is None:
 		if authorized:
 			updateStatus(client)
@@ -552,16 +550,11 @@ def main():
 	elif mode[0] == 'radio_type':
 		radio_type = args["radio_type"][0]
 		build_radio_type(client, radio_type)
-	elif mode[0] == 'make_radio':
-		make_radio_type = args["type"][0]
-		make_radio_value = args["value"][0]
-		url = "RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'custom', make_radio_type, make_radio_value)
-		threading.Thread(target=xbmc.executebuiltin, args=(url,)).run()
-
 	elif mode[0] == 'radio_station':
 		radio_type = args["radio_type"][0]
 		station_key = args["station_key"][0]
 		url = "RunScript(%s, %s, %s, %s)" % (SERVICE_SCRIPT, 'radio', radio_type, station_key)
+		log("Run radio with url: %s" % url)
 		threading.Thread(target=xbmc.executebuiltin, args=(url,)).run()
 
 
@@ -668,7 +661,6 @@ if __name__ == '__main__':
 	high_res = bool(settings.getSettingBool('high_res'))
 	auto_download = bool(settings.getSettingBool('auto_download'))
 
-	log("sys.argv: %s" % sys.argv)
 	log("codec: %s, high_res: %s" % (codec, high_res))
 	addon_handle = int(sys.argv[1])
 	main()

@@ -6,7 +6,6 @@
 4. Open Settings->Add-ons->Install from ZIP file
 5. Select downloaded [plugin zip file][plugin_zip]
 6. That's all. You are awesome!   
-
 7. Kodi 19 plugin is [here][plugin_19_zip]
 
 #### Setup:
@@ -16,8 +15,8 @@ Start plugin and select Login option.
 Provide your login and password.
 Plugin doesn't store password. Yandex will generate token. It can be found in plugin settings.
 
-##### refs:
-based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
+##### Refs:
+* based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
 
 
 ### [Неофициальный] плагин Яндекс Музыки для Kodi
@@ -28,8 +27,8 @@ based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/
 4. Откройте Settings->Add-ons->Install from ZIP file
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
-
 7. Плагин для Kodi 19 [тут][plugin_19_zip]
+
 #### Настройка:
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.
 

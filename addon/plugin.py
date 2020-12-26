@@ -210,7 +210,7 @@ def build_main(authorized, client):
 		landing = client.landing(["personal-playlists"])
 		block = [b for b in landing.blocks if b.type == "personal-playlists"][0]
 		playlists = [entity.data.data for entity in block.entities]
-		entry_list += [build_item_playlist(playlist) for playlist in playlists if playlist.is_valid]
+		entry_list += [build_item_playlist(playlist) for playlist in playlists]
 
 	else:
 		li = xbmcgui.ListItem(label="Login")
@@ -381,7 +381,7 @@ def build_all_tracks(client, artist_id):
 
 def build_playlist(client, playlist_id):
 	uid, kind = playlist_id.split(":")
-	tracksShort = client.playlist(kind=kind, user_id=uid).tracks
+	tracksShort = client.users_playlists(kind=kind, user_id=uid).tracks
 	tracks = client.tracks([t.track_id for t in tracksShort])
 
 	elements = [build_item_track(track) for track in tracks]

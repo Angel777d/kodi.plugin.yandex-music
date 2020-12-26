@@ -39,6 +39,9 @@ Plugin doesn't store password. Yandex will generate token. It can be found in pl
 
 #### Changelog
 
+##### Version 0.1.1
+Library version updated
+
 ##### Version 0.1.0
 Python 3 for Kodi 19 supported
 Track item info updated
@@ -81,6 +84,6 @@ Get cover image crash fixed
 2. high res option added
 3. auto download option added
 
-[plugin_19_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.0.zip
+[plugin_19_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.1.zip
 [plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api

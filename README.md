@@ -32,9 +32,9 @@ Plugin doesn't store password. Yandex will generate token. It can be found in pl
 #### Настройка:
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.
 
-Запустите плагин и передите в поле Login.
-Введите ваш логин и пароль.
-Плагин не хранит пароль. Яндекс сгенерит токен. Токен можно найти в настройках плагина.
+1. Запустите плагин и передите в поле Login.
+2. Введите ваш логин и пароль.
+3. Плагин не хранит пароль. Яндекс сгенерит токен. Токен можно найти в настройках плагина.
 
 
 #### Changelog
@@ -44,6 +44,9 @@ Python 3 for Kodi 19 supported
 Track item info updated
 Clear logs 
 
+##### Version 0.0.39
+Search api changes fixed
+
 ##### Version 0.0.38
 New yandex music account crash fixed 
 
@@ -51,9 +54,9 @@ New yandex music account crash fixed
 Mixes added 
 
 ##### Version 0.0.36
-User playlist and user likes moved to own folder
-Chart added
-Russian description added to README.md
+1. User playlist and user likes moved to own folder
+2. Chart added
+3. Russian description added to README.md
 
 ##### Version 0.0.35
 Radio and stream code refactoring and cleanup
@@ -79,5 +82,5 @@ Get cover image crash fixed
 3. auto download option added
 
 [plugin_19_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.0.zip
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.38.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 [ym_lib]: https://github.com/MarshalX/yandex-music-api

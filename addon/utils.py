@@ -18,7 +18,7 @@ def create_track_list_item(track, titleFormat="%s", show_artist=True):
     else:
         img_url = ""
 
-    label = titleFormat % f"{artist.name} - {track.title}" if show_artist else track.title
+    label = titleFormat % f"{artist.name} - {track.title}" if artist and show_artist else track.title
     label2 = f"{album.title} ({str(album.year)})" if album else ""
 
     li = xbmcgui.ListItem(label=label, label2=label2, path="", offscreen=False)

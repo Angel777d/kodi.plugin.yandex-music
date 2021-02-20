@@ -10,10 +10,10 @@ import xbmcgui
 import xbmcplugin
 
 import radio
-from mutagen import mp3, easyid3
 from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url, get_track_download_info, \
 	log, notify
 from yandex_service import check_login, login
+from mutagen import mp3, easyid3
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
 SERVICE_SCRIPT = "special://home/addons/plugin.yandex-music/service.py"

@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("./")
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib/yandex-music-api/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/mutagen/"))
 
 import xbmcaddon
 import xbmcgui

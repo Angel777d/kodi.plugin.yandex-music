@@ -1,6 +1,12 @@
-### [Unofficial] Yandex Music Kodi plugin
+# [Unofficial] Yandex Music Kodi plugin
 
-#### Install
+## Kodi 19 "Matrix" supported
+
+### Disclaimer
+
+This project and its author neither associated, nor affiliated with Yandex in any way.
+
+### Install
 
 1. Download [plugin zip file][plugin_zip] from repository
 2. In Kodi open Settings->System->Add-ons
@@ -9,20 +15,19 @@
 5. Select downloaded [plugin zip file][plugin_zip]
 6. That's all. You are awesome!
 
-#### Setup:
+### Configure
 
-All features will be available after login only.
+All features will be available only after signing in Yandex.Music account.
 
 Start plugin and select Login option. Provide your login and password. Plugin doesn't store password. Yandex will
 generate token. It can be found in plugin settings.
 
-##### Refs:
+### Refs
 
 * based on [yandex-music python library][ym_lib] by [MarshalX](https://github.com/MarshalX)
 
-### [Неофициальный] плагин Яндекс Музыки для Kodi
-
-#### Установка
+## [Неофициальный] плагин Яндекс Музыки для Kodi
+### Установка
 
 1. Скачайте [zip файл плагина][plugin_zip] из репозитория
 2. В Kodi откройте Settings->System->Add-ons
@@ -31,7 +36,7 @@ generate token. It can be found in plugin settings.
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
 
-#### Настройка:
+### Настройка:
 
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.
 
@@ -39,71 +44,71 @@ generate token. It can be found in plugin settings.
 2. Введите ваш логин и пароль.
 3. Плагин не хранит пароль. Яндекс сгенерит токен. Токен можно найти в настройках плагина.
 
-#### Old version
+### Old version
 
 Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
-#### Changelog
+### Changelog
 
-##### Version 0.1.2
+#### Version 0.1.2
 
 * Update YM lib to release.
 * Update Mutagen to Head.
 * Kodi 18 "Leia" version is no longer supported.
 
-##### Version 0.1.1
+#### Version 0.1.1
 
 * Library version updated
 
-##### Version 0.1.0
+#### Version 0.1.0
 
 * Python 3 for Kodi 19 supported
 * Track item info updated
 * Clear logs
 
-##### Version 0.0.39
+#### Version 0.0.39
 
 * Search api changes fixed
 
-##### Version 0.0.38
+#### Version 0.0.38
 
 * New yandex music account crash fixed
 
-##### Version 0.0.37
+#### Version 0.0.37
 
 * Mixes added
 
-##### Version 0.0.36
+#### Version 0.0.36
 
 * User playlist and user likes moved to own folder
 * Chart added
 * Russian description added to README.md
 
-##### Version 0.0.35
+#### Version 0.0.35
 
 * Radio and stream code refactoring and cleanup
 
-##### Version 0.0.34
+#### Version 0.0.34
 
 * Stream by track fixes
 
-##### Version 0.0.30
+#### Version 0.0.30
 
 * Radio fixed
 
-##### Version 0.0.29
+#### Version 0.0.29
 
 * Stream from track, album, artist
 
-##### Version 0.0.28
+#### Version 0.0.28
 
 * Smart playlists update fixed
 
-##### Version 0.0.27
+#### Version 0.0.27
 
 * Get cover image crash fixed
 
-##### Version 0.0.26
+#### Version 0.0.26
 
 * codec option added
 * high res option added

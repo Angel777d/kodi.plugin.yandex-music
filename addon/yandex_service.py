@@ -51,8 +51,8 @@ def login(settings):
 
 def do_login(settings, username, password):
     try:
-        token = Client().generate_token_by_username_and_password(username, password)
-        settings.setSetting('token', token)
+        client = Client().from_credentials(username, password)
+        settings.setSetting('token', client.token)
         return True
     except Unauthorized:
         return False

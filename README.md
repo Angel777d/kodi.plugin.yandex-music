@@ -49,12 +49,18 @@ generate token. It can be found in plugin settings.
 Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
 ### Changelog
+#### Version 0.1.3
+
+* New YM authorization added.
 
 #### Version 0.1.2
 
 * Update YM lib to release.
 * Update Mutagen to Head.
 * Kodi 18 "Leia" version is no longer supported.
+
+<details>
+  <summary>More</summary>
 
 #### Version 0.1.1
 
@@ -98,7 +104,7 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
 #### Version 0.0.29
 
-* Stream from track, album, artist
+* Stream from a track, album, artist
 
 #### Version 0.0.28
 
@@ -111,10 +117,12 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 #### Version 0.0.26
 
 * codec option added
-* high res option added
+* high-res audio option added
 * auto download option added
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.2.zip
+</details>
+
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.3.zip
 
 [plugin_18_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 

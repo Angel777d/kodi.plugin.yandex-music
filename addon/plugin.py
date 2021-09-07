@@ -228,13 +228,18 @@ def build_mixes(client):
 
 	elements = []
 	for mix in mixes.entities:
-		tag = mix.data.url.split("/")[2].split("?")[0].encode("utf-8")
-		img_url = "https://" + mix.data.background_image_uri.replace("%%", "400x400")
-		url = build_url({'mode': 'mix', 'title': mix.data.title, "tag": tag})
-		li = xbmcgui.ListItem(label=mix.data.title)
-		li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
-		li.setProperty('fanart_image', img_url)
-		elements.append((url, li, True))
+		params = mix.data.url.split("/")
+		mix_type = params[1]
+		if mix_type == "tag":
+			tag = params[2].split("?")[0].encode("utf-8")
+			img_url = "https://" + mix.data.background_image_uri.replace("%%", "400x400")
+			url = build_url({'mode': 'mix', 'title': mix.data.title, "tag": tag})
+			li = xbmcgui.ListItem(label=mix.data.title)
+			li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
+			li.setProperty('fanart_image', img_url)
+			elements.append((url, li, True))
+		else:
+			log("Mix type " + mix_type + " not supported")
 
 	xbmcplugin.addDirectoryItems(addon_handle, elements, len(elements))
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -624,7 +629,7 @@ def updateStatus(client):
 
 def getSortedResults(search):
 	fields = ["albums", "artists", "playlists", "tracks", "videos"]
-	tmp = [(getattr(search, field).order, field) for field in fields]
+	tmp = [(getattr(search, field).order, field) for field in fields if getattr(search, field)]
 	tmp = sorted(tmp, key=lambda v: v[0])
 	return [(field, getattr(search, field)) for order, field in tmp]
 

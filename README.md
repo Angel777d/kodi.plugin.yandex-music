@@ -36,6 +36,15 @@ generate token. It can be found in plugin settings.
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
 
+<details>
+    <summary>Логин</summary>
+    ![Запустите плагин](assets/readme/kodi_login_1.png?raw=true "Запустите плагин")
+    ![Жмяк Login](assets/readme/kodi_login_2.png?raw=true "Выберите строку Login")
+    ![Введите логин](assets/readme/kodi_login_1.png?raw=true "Введите логин")
+    ![Введите пароль](assets/readme/kodi_login_1.png?raw=true "Введите пароль")
+    ![Наслаждайтесь](assets/readme/kodi_login_1.png?raw=true "Готово!")
+</details>
+
 ### Настройка:
 
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.

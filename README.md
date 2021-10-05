@@ -38,11 +38,11 @@ generate token. It can be found in plugin settings.
 
 <details>
     <summary>Логин</summary>
-    ![Запустите плагин](assets/readme/kodi_login_1.png?raw=true "Запустите плагин")
-    ![Жмяк Login](assets/readme/kodi_login_2.png?raw=true "Выберите строку Login")
-    ![Введите логин](assets/readme/kodi_login_1.png?raw=true "Введите логин")
-    ![Введите пароль](assets/readme/kodi_login_1.png?raw=true "Введите пароль")
-    ![Наслаждайтесь](assets/readme/kodi_login_1.png?raw=true "Готово!")
+    ![Запустите плагин](assets/readme/kodi_login_1.png)
+    ![Жмяк Login](assets/readme/kodi_login_2.png)
+    ![Введите логин](assets/readme/kodi_login_1.png)
+    ![Введите пароль](assets/readme/kodi_login_1.png)
+    ![Наслаждайтесь](assets/readme/kodi_login_1.png)
 </details>
 
 ### Настройка:

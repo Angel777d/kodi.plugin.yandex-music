@@ -38,7 +38,7 @@ generate token. It can be found in plugin settings.
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
 
-###[Как залогинться в (картинках!)](LOGIN.md)
+[Как залогинться](LOGIN.md)
 
 
 ### Настройка:

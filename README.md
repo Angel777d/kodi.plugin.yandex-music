@@ -15,6 +15,8 @@ This project and its author neither associated, nor affiliated with Yandex in an
 5. Select downloaded [plugin zip file][plugin_zip]
 6. That's all. You are awesome!
 
+[How to login](LOGIN.md)
+
 ### Configure
 
 All features will be available only after signing in Yandex.Music account.
@@ -35,6 +37,8 @@ generate token. It can be found in plugin settings.
 4. Откройте Settings->Add-ons->Install from ZIP file
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
+
+###[Как залогинться в (картинках!)](LOGIN.md)
 
 
 ### Настройка:

@@ -41,9 +41,9 @@ generate token. It can be found in plugin settings.
 
 ![Запустите плагин](assets/readme/kodi_login_1.png "Запустите плагин")
 ![Жмяк Login](assets/readme/kodi_login_2.png "Выберите строку Login")
-![Введите логин](assets/readme/kodi_login_1.png "Введите логин")
-![Введите пароль](assets/readme/kodi_login_1.png "Введите пароль")
-![Наслаждайтесь](assets/readme/kodi_login_1.png "Готово!")
+![Введите логин](assets/readme/kodi_login_3.png "Введите логин")
+![Введите пароль](assets/readme/kodi_login_4.png "Введите пароль")
+![Наслаждайтесь](assets/readme/kodi_login_5.png "Готово!")
 
 </details>
 

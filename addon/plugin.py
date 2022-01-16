@@ -175,6 +175,15 @@ def build_item_album(album, titleFormat="%s"):
 	return url, li, True
 
 
+def build_retry():
+	li = xbmcgui.ListItem(label="No Connection. Retry")
+	url = build_url({'mode': None, 'title': "No Connection. Retry"})
+	entry_list = [(url, li, True), ]
+
+	xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
+	xbmcplugin.endOfDirectory(addon_handle, updateListing=True, cacheToDisc=False)
+
+
 def build_main(authorized, client):
 	li = xbmcgui.ListItem(label="Search")
 	# li.setProperty('fanart_image', "")
@@ -484,7 +493,12 @@ def main():
 	# xbmc.executebuiltin("StopScript(%s)" % SERVICE_SCRIPT)
 
 	checkSettings()
-	authorized, client = check_login(settings)
+	try:
+		authorized, client = check_login(settings)
+	except Exception as ex:
+		build_retry()
+		return
+
 	# log("authorized: %s" % authorized)
 
 	args = urllib.parse.parse_qs(sys.argv[2][1:])

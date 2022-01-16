@@ -1,6 +1,8 @@
 import os
 import sys
 
+from urllib3 import HTTPSConnectionPool
+
 sys.path.append("./")
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib/yandex-music-api/"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib/mutagen/"))
@@ -9,7 +11,7 @@ import xbmcaddon
 import xbmcgui
 
 from yandex_music import Client
-from yandex_music.exceptions import Unauthorized, BadRequest
+from yandex_music.exceptions import Unauthorized, BadRequest, NetworkError
 
 
 def tr(value):
@@ -36,13 +38,19 @@ def login(settings):
 
     while True:
         username, password = get_login_password(settings)
-        if do_login(settings, username, password):
+        result, reason = do_login(settings, username, password)
+        if result:
             return True
         heading = tr(32103)
-        line1 = tr(32104)
+
+        if reason == 1:  # wrong login\pass
+            line1 = tr(32104) + " " + username + " | " + password
+        else:
+            line1 = "Connection issues"
+
         # todo: localize
         stop_, retry_ = "Close", "Retry"
-        do_retry = xbmcgui.Dialog().yesno(heading, line1, username, password, nolabel=stop_, yeslabel=retry_)
+        do_retry = xbmcgui.Dialog().yesno(heading, line1, nolabel=stop_, yeslabel=retry_)
         if not do_retry:
             break
 
@@ -53,11 +61,13 @@ def do_login(settings, username, password):
     try:
         client = Client().from_credentials(username, password)
         settings.setSetting('token', client.token)
-        return True
+        return True, -1
     except Unauthorized:
-        return False
+        return False, 1
     except BadRequest:
-        return False
+        return False, 2
+    except NetworkError:
+        return False,2
 
 
 def get_login_password(settings):

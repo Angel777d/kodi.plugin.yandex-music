@@ -1,6 +1,7 @@
 [submodule "addon/lib/yandex-music-api"]
 	path = addon/lib/yandex-music-api
 	url = https://github.com/MarshalX/yandex-music-api.git
+	branch=development
 [submodule "addon/lib/mutagen"]
 	path = addon/lib/mutagen
 	url = https://github.com/quodlibet/mutagen.git

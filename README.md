@@ -55,6 +55,11 @@ generate token. It can be found in plugin settings.
 Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
 ### Changelog
+#### Version 0.1.5
+
+* Login issues.
+* Note: 16.01.22 - Login available with 2FA only
+
 #### Version 0.1.4
 
 * Search fixed
@@ -133,7 +138,7 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
 </details>
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.4.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.5.zip
 
 [plugin_18_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 

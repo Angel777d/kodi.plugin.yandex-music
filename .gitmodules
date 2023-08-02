@@ -1,7 +1,48 @@
 [submodule "addon/lib/yandex-music-api"]
 	path = addon/lib/yandex-music-api
 	url = https://github.com/MarshalX/yandex-music-api.git
-	branch=development
+	branch = main
 [submodule "addon/lib/mutagen"]
 	path = addon/lib/mutagen
-	url = https://github.com/quodlibet/mutagen.git
+    branch = master
+	url = https://github.com/quodlibet/mutagen.git   
+[submodule "addon/lib/aiofiles"]
+	path = addon/lib/aiofiles
+	url = https://github.com/Tinche/aiofiles
+    branch = main
+[submodule "addon/lib/aiohttp"]
+	path = addon/lib/aiohttp
+	url = https://github.com/aio-libs/aiohttp
+    branch = master
+[submodule "addon/lib/aiosignal"]
+	path = addon/lib/aiosignal
+	url = https://github.com/aio-libs/aiosignal
+    branch = master
+[submodule "addon/lib/async_timeout"]
+	path = addon/lib/async_timeout
+	url = https://github.com/aio-libs/async-timeout
+    branch = master
+[submodule "addon/lib/cchardet"]
+	path = addon/lib/cchardet
+	url = https://github.com/PyYoshi/cChardet
+    branch = master
+[submodule "addon/lib/charset_normalizer"]
+	path = addon/lib/charset_normalizer
+	url = https://github.com/Ousret/charset_normalizer
+    branch = master
+[submodule "addon/lib/frozenlist"]
+	path = addon/lib/frozenlist
+	url = https://github.com/aio-libs/frozenlist
+    branch = master
+[submodule "addon/lib/multidict"]
+	path = addon/lib/multidict
+	url = https://github.com/aio-libs/multidict
+    branch = master
+[submodule "addon/lib/typing_extensions"]
+	path = addon/lib/typing_extensions
+	url = https://github.com/python/typing_extensions
+    branch = main
+[submodule "addon/lib/yarl"]
+	path = addon/lib/yarl
+	url = https://github.com/aio-libs/yarl
+    branch = master

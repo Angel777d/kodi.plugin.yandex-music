@@ -6,12 +6,22 @@ from urllib3 import HTTPSConnectionPool
 sys.path.append("./")
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib/yandex-music-api/"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib/mutagen/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/aiohttp/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/multidict/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/typing_extensions/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/yarl/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/async_timeout/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/charset_normalizer/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/cchardet/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/aiosignal/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/frozenlist/"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib/aiofiles/"))
 
 import xbmcaddon
 import xbmcgui
 
 from yandex_music import Client
-from yandex_music.exceptions import Unauthorized, BadRequest, NetworkError
+from yandex_music.exceptions import UnauthorizedError, BadRequestError, NetworkError
 
 
 def tr(value):
@@ -25,9 +35,9 @@ def check_login(settings):
         return False, Client()
 
     try:
-        client = Client.from_token(token)
+        client = Client(token).init()
         return True, client
-    except Unauthorized as _:
+    except UnauthorizedError as _:
         return False, Client()
 
 
@@ -62,9 +72,9 @@ def do_login(settings, username, password):
         client = Client().from_credentials(username, password)
         settings.setSetting('token', client.token)
         return True, -1
-    except Unauthorized:
+    except UnauthorizedError:
         return False, 1
-    except BadRequest:
+    except BadRequestError:
         return False, 2
     except NetworkError:
         return False,2

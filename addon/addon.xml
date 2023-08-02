@@ -17,5 +17,8 @@
         <language>en_gb</language>
 		<platform>all</platform>
 		<license>GNU Lesser General Public License v3.0</license>
+        <assets>
+            <icon>icon.png</icon>
+        </assets>
     </extension>
 </addon>

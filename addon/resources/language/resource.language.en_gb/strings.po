@@ -51,29 +51,29 @@ msgstr "Login"
 
 msgctxt "#32031"
 msgid "Token"
-msgstr ""
+msgstr "Token"
 
 msgctxt "#32032"
-msgid "User"
-msgstr "User"
+msgid ""
+msgstr ""
 
 msgctxt "#32033"
-msgid "Password"
-msgstr "Password"
+msgid ""
+msgstr ""
 
 #: login
 msgctxt "#32101"
-msgid "User"
-msgstr "User"
+msgid "Yandex Music Token Setup"
+msgstr ""
 
 msgctxt "#32102"
-msgid "Password"
-msgstr "Password"
+msgid "Close"
+msgstr "Close"
 
 msgctxt "#32103"
-msgid "Login Error:"
-msgstr "Login Error:"
+msgid "Retry"
+msgstr "Retry"
 
 msgctxt "#32104"
-msgid "Can't login with:"
-msgstr "Can't login with:"
+msgid "Can't login with this token."
+msgstr ""

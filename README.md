@@ -14,14 +14,18 @@ This project and its author neither associated, nor affiliated with Yandex in an
 4. Open Settings->Add-ons->Install from ZIP file
 5. Select downloaded [plugin zip file][plugin_zip]
 6. That's all. You are awesome!
-
-[How to login](LOGIN.md)
-
+ 
 ### Configure
 
 All features will be available only after signing in Yandex.Music account.
 
-Start plugin and select Login option. Provide your login and password. Plugin doesn't store password. Yandex will
+1. Get Yandex Music auth token. [How to get token][get_token]
+2. Start plugin and select Login option.
+3. Paste your token and press ok.
+4. Token can be changed in plugin settings.
+
+
+ Yandex will
 generate token. It can be found in plugin settings.
 
 ### Refs
@@ -38,23 +42,28 @@ generate token. It can be found in plugin settings.
 5. Выберете скачаный [zip файл][plugin_zip]
 6. Готово! Вы великолепны!
 
-[Как залогинться](LOGIN.md)
-
 
 ### Настройка:
 
 Все возможности плагина станут доступны после логина в аккаунт Яндекса.
 
-1. Запустите плагин и передите в поле Login.
-2. Введите ваш логин и нажмите OK.
-3. Введите ваш пароль и нажмите OK.
-4. Плагин не хранит пароль. Яндекс сгенерит токен. Токен можно найти в настройках плагина.
+1. Раздобыть токен от яндекс музыки. [Как получить токен][get_token]
+2. Запустите плагин и передите в поле Login.
+3. Введите ваш токен и нажмите OK.
+4. Токен может быть изменен в конфиге плагина в любой момент
 
 ### Old version
 
 Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
+Old versions not supported and can be outdated.
 
 ### Changelog
+#### Version 0.1.6
+
+* Update to latest YandexMusic lib.
+* User+Password login method removed
+* How to get token link added to README
+
 #### Version 0.1.5
 
 * Login issues.
@@ -65,6 +74,10 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 * Search fixed
 * Mixes fixed
 
+
+<details>
+  <summary>More</summary>
+
 #### Version 0.1.3
 
 * New YM authorization added.
@@ -74,9 +87,6 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 * Update YM lib to release.
 * Update Mutagen to Head.
 * Kodi 18 "Leia" version is no longer supported.
-
-<details>
-  <summary>More</summary>
 
 #### Version 0.1.1
 
@@ -138,8 +148,10 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 
 </details>
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.5.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.6.zip
 
 [plugin_18_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 
 [ym_lib]: https://github.com/MarshalX/yandex-music-api
+
+[get_token]: https://github.com/MarshalX/yandex-music-token

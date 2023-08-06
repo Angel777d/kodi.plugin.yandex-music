@@ -325,7 +325,7 @@ def build_item_radio_station(radio_type, key, s_info):
 	li.setArt({"thumb": img_url, "icon": img_url, "fanart": img_url})
 	li.setProperty('fanart_image', s_info.getImage("460x460"))
 	url = build_url({'mode': 'radio_station', 'title': title, "radio_type": radio_type, "station_key": key})
-	return url, li, True
+	return url, li, False
 
 
 def build_radio(client):

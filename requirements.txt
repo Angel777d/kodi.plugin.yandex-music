@@ -1,2 +1,2 @@
-mutagen==1.43.1
-yandex-music~=0.1.2
+yandex-music
+mutagen

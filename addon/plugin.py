@@ -10,9 +10,10 @@ import xbmcgui
 import xbmcplugin
 
 import radio
+import yandex_service
+from yandex_music.exceptions import NetworkError
 from utils import create_track_list_item, fixPath, getTrackPath, checkFolder, get_track_url, get_track_download_info, \
 	log, notify
-from yandex_service import check_login, login
 from mutagen import mp3, easyid3
 
 settings = xbmcaddon.Addon("plugin.yandex-music")
@@ -432,11 +433,17 @@ def build_search(client):
 		"tracks": "Track: %s",
 	}
 
-	results = getSortedResults(client.search(searchString))
+	results = None
+	try:
+		results = getSortedResults(client.search(searchString))
+	except NetworkError as ex:
+		log(f"Exception on search: {ex}")
+		notify("Error", f"Search error {ex}")
 
-	for resultType, searchResult in results:
-		if resultType == "videos":
-			continue
+	if results:
+		for resultType, searchResult in results:
+			if resultType == "videos":
+				continue
 		entry_list = [func[resultType](entry, templates.get(resultType, "%s")) for entry in searchResult.results]
 		if entry_list:
 			xbmcplugin.addDirectoryItems(addon_handle, entry_list, len(entry_list))
@@ -494,8 +501,9 @@ def main():
 
 	checkSettings()
 	try:
-		authorized, client = check_login(settings)
+		authorized, client = yandex_service.check_login(settings)
 	except Exception as ex:
+		log(f"Exception on login: {ex}")
 		build_retry()
 		return
 
@@ -514,8 +522,8 @@ def main():
 		build_main(authorized, client)
 	elif mode[0] == 'login':
 		if not authorized:
-			login(settings)
-		authorized, client = check_login(settings)
+			yandex_service.login(settings)
+		authorized, client = yandex_service.check_login(settings)
 		build_main(authorized, client)
 	elif mode[0] == 'user_playlists':
 		build_user_playlists(client)
@@ -631,12 +639,12 @@ def do_download(tracks):
 
 
 def updateStatus(client):
-	def do_update(cl):
-		cl.account_status()
-		cl.account_experiments()
-		cl.settings()
-		cl.permission_alerts()
-		cl.rotor_account_status()
+	def do_update(_client):
+		_client.account_status()
+		_client.account_experiments()
+		_client.settings()
+		_client.permission_alerts()
+		_client.rotor_account_status()
 
 	Thread(target=do_update, args=(client,)).start()
 

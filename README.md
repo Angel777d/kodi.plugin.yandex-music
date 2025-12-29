@@ -58,6 +58,11 @@ Older Kodi 18 "Leia" plugin is [here][plugin_18_zip]
 Old versions not supported and can be outdated.
 
 ### Changelog
+#### Version 0.1.7
+
+* Update to latest YandexMusic lib.
+* Some logs improved
+
 #### Version 0.1.6
 
 * Update to latest YandexMusic lib.
@@ -148,7 +153,7 @@ Old versions not supported and can be outdated.
 
 </details>
 
-[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.6.zip
+[plugin_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.1.7.zip
 
 [plugin_18_zip]: https://github.com/Angel777d/kodi.plugin.yandex-music/raw/master/bin/kodi.plugin.yandex-music-0.0.39.zip
 
